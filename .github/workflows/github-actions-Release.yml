@@ -1,10 +1,11 @@
 name: Deploy to ACI
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Build and Push ACR"]
+    types:
+      - completed  # Only runs after build is completed
+    conclusion: success  # Runs only if build succeeds
 
 permissions:
   id-token: write
