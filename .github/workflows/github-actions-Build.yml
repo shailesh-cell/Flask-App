@@ -43,7 +43,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -backend-config=env/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
 
       - name: Terraform Apply (Plan Only - Debugging)
         run: terraform plan -var="environment=dev" -out=tfplan
