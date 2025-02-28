@@ -1,5 +1,5 @@
-module "keyvault" {
-  source       = "./modules/keyvault"
+module "key_vault" {
+  source       = "./modules/key_vault"
   app_name     = var.app_name
   environment  = var.environment
   location     = var.location
