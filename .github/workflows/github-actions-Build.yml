@@ -67,7 +67,7 @@ jobs:
           docker push $ACR_LOGIN_SERVER/flask-app:${{ github.sha }}
 
       - name: Store Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-image
           path: app/Dockerfile
