@@ -35,41 +35,44 @@ jobs:
       - name: Log in to Azure with OIDC
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
-        
-    env:
-        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
 
       - name: Terraform Apply (Plan Only - Debugging)
-        run: terraform plan -var="environment=dev" -out=tfplan
+        run: terraform plan -var="environment=${{ env.ENV }}" -out=tfplan
 
       - name: Extract ACR Name from Terraform
         run: |
-          ACR_NAME=$(terraform output -raw acr_name)
+          ACR_NAME=$(terraform output -raw acr_name || echo "ERROR")
+          if [[ "$ACR_NAME" == "ERROR" ]]; then
+            echo "Terraform output failed. Exiting."
+            exit 1
+          fi
           echo "Extracted ACR Name: $ACR_NAME"
           echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
 
       - name: Get ACR Login Server
         run: |
-          ACR_LOGIN=$(az acr show --name $ACR_NAME --query loginServer --output tsv)
+          ACR_LOGIN=$(az acr show --name $ACR_NAME --query loginServer --output tsv || echo "ERROR")
+          if [[ "$ACR_LOGIN" == "ERROR" ]]; then
+            echo "Failed to retrieve ACR login server. Exiting."
+            exit 1
+          fi
           echo "ACR Login Server: $ACR_LOGIN"
           echo "ACR_LOGIN_SERVER=$ACR_LOGIN" >> $GITHUB_ENV
 
       - name: Debug - Check ACR Credentials in Key Vault
         run: |
           echo "Retrieving ACR credentials from Key Vault..."
-          az keyvault secret show --name "${{ env.ACR_NAME }}-acr-username" --vault-name my-keyvault
-          az keyvault secret show --name "${{ env.ACR_NAME }}-acr-password" --vault-name my-keyvault
+          az keyvault secret show --name "${{ env.ACR_NAME }}-acr-username" --vault-name my-keyvault || echo "Secret not found"
+          az keyvault secret show --name "${{ env.ACR_NAME }}-acr-password" --vault-name my-keyvault || echo "Secret not found"
 
       - name: Build and Tag Image
         run: |
