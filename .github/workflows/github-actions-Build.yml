@@ -3,7 +3,9 @@ name: Build and Push to ACR
 on:
   push:
     branches:
-      - main
+      - dev
+      - uat
+      - prod
 
 permissions:
   id-token: write
@@ -16,6 +18,16 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        
+      - name: Set ENV Based on Branch
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+            echo "ENV=dev" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/uat" ]]; then
+            echo "ENV=uat" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/prod" ]]; then
+            echo "ENV=prod" >> $GITHUB_ENV
+          fi
 
       - name: Debug - List Terraform Files
         run: ls -R
