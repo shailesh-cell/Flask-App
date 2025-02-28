@@ -41,6 +41,11 @@ jobs:
 
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
+        
+    env:
+        ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
