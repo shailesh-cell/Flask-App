@@ -14,8 +14,7 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = false  # ❌ No need for admin credentials with Managed Identity
 }
 
-# Local Variables for ACR Details
 locals {
-  acr_id   = coalesce(try(data.azurerm_container_registry.existing[0].id, null), try(azurerm_container_registry.acr[0].id, null))
-  acr_name = coalesce(try(data.azurerm_container_registry.existing[0].name, null), try(azurerm_container_registry.acr[0].name, null))
+  acr_id   = coalesce(try(data.azurerm_container_registry.existing.id, null), try(azurerm_container_registry.acr[0].id, null))
+  acr_name = coalesce(try(data.azurerm_container_registry.existing.name, null), try(azurerm_container_registry.acr[0].name, null))
 }
