@@ -3,27 +3,33 @@ data "azurerm_container_registry" "existing" {
   resource_group_name = var.resource_group_name
 }
 
-resource "null_resource" "acr_check" {
-  provisioner "local-exec" {
-    command = length(data.azurerm_container_registry.existing.id) > 0 ? "echo ACR already exists" : "echo ACR does not exist, creating..."
-  }
+locals {
+  acr_exists = length(try(data.azurerm_container_registry.existing.id, "")) > 0
+}
 
-  triggers = {
-    acr_id = length(data.azurerm_container_registry.existing.id) > 0 ? "exists" : "create"
+locals {
+  create_acr = local.acr_exists ? {} : {
+    "${var.app_name}acr${var.environment}" = {
+      name                = "${var.app_name}acr${var.environment}"
+      resource_group_name = var.resource_group_name
+      location            = var.location
+      sku                 = "Standard"
+      admin_enabled       = false  # ❌ No need for admin credentials with Managed Identity
+    }
   }
 }
 
 resource "azurerm_container_registry" "acr" {
-  depends_on = [null_resource.acr_check]
+  for_each = local.create_acr
 
-  name                = "${var.app_name}acr${var.environment}"
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  sku                 = "Standard"
-  admin_enabled       = false  # ❌ No need for admin credentials with Managed Identity
+  name                = each.value.name
+  resource_group_name = each.value.resource_group_name
+  location            = each.value.location
+  sku                 = each.value.sku
+  admin_enabled       = each.value.admin_enabled
 }
 
 locals {
-  acr_id   = coalesce(data.azurerm_container_registry.existing.id, azurerm_container_registry.acr.id)
-  acr_name = coalesce(data.azurerm_container_registry.existing.name, azurerm_container_registry.acr.name)
+  acr_id   = coalesce(try(data.azurerm_container_registry.existing.id, null), azurerm_container_registry.acr[*].id[0])
+  acr_name = coalesce(try(data.azurerm_container_registry.existing.name, null), azurerm_container_registry.acr[*].name[0])
 }
