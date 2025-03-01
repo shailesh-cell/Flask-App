@@ -59,6 +59,7 @@ jobs:
 
       - name: Extract ACR Name from Terraform
         run: |
+          export ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}
           ACR_NAME=$(terraform output -raw acr_name || echo "ERROR")
           if [[ "$ACR_NAME" == "ERROR" ]]; then
             echo "Terraform output failed. Exiting."
