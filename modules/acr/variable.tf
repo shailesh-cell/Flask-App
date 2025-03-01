@@ -22,3 +22,9 @@ variable "key_vault_id" {
   description = "The ID of the Azure Key Vault where secrets will be stored"
   type        = string
 }
+
+variable "acr_password" {
+  description = "The ACR password"
+  type        = string
+  sensitive   = true
+}
