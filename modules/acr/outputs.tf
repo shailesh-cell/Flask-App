@@ -1,17 +1,12 @@
-output "acr_name" {
-  description = "The name of the Azure Container Registry"
-  value       = local.acr_name
+output "acr_id" {
+  value = local.acr_exists ? data.azurerm_container_registry.existing.id : azurerm_container_registry.acr[each.key].id
 }
 
-
-output "id" {
-  value = azurerm_container_registry.acr.id
+output "acr_name" {
+  value = local.acr_exists ? data.azurerm_container_registry.existing.name : azurerm_container_registry.acr[each.key].name
 }
 
 output "login_server" {
-  value = azurerm_container_registry.acr.login_server
+  value = local.acr_exists ? data.azurerm_container_registry.existing.login_server : azurerm_container_registry.acr[each.key].login_server
 }
 
-output "name" {
-  value = azurerm_container_registry.acr.name
-}
