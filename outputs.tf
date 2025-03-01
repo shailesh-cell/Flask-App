@@ -1,5 +1,5 @@
 output "key_vault_name" {
-  value = module.keyvault.name
+  value = module.key_vault.name
 }
 
 output "acr_name" {

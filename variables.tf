@@ -32,3 +32,8 @@ variable "acr_username" {
   description = "Username for Azure Container Registry"
   type        = string
 }
+
+variable "tenant_id" {
+  description = "Azure Tenant ID"
+  type        = string
+}
