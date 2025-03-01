@@ -1,13 +1,3 @@
-# Retrieve ACR Credentials from Key Vault
-data "azurerm_key_vault_secret" "acr_username" {
-  name         = "${var.app_name}-acr-username"
-  key_vault_id = var.key_vault_id
-}
-
-data "azurerm_key_vault_secret" "acr_password" {
-  name         = "${var.app_name}-acr-password"
-  key_vault_id = var.key_vault_id
-}
 
 # Create ACI Container Group
 resource "azurerm_container_group" "aci" {
@@ -49,7 +39,8 @@ resource "azurerm_container_group" "aci" {
 
 # Assign ACI Access to ACR (if RBAC is needed)
 resource "azurerm_role_assignment" "aci_acr_pull" {
-  scope                = var.acr_id
+  principal_id         = module.aci.aci_identity_id
   role_definition_name = "AcrPull"
-  principal_id         = var.aci_identity_id
+  scope                = module.acr.acr_id
+  depends_on           = [module.aci]
 }

@@ -37,5 +37,7 @@ locals {
 resource "azurerm_role_assignment" "aci_kv_access" {
   scope                = local.key_vault_id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = var.aci_identity_id
+  principal_id         = module.aci.aci_identity_id
+
+  depends_on = [module.aci]  # Ensure ACI is created first
 }
