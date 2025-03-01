@@ -1,9 +1,9 @@
-output "aci_name" {
+output name" {
   description = "The name of the ACI instance"
   value       = azurerm_container_group.aci.name
 }
 
-output "aci_fqdn" {
+output "fqdn" {
   description = "The Fully Qualified Domain Name (FQDN) for the ACI"
   value       = azurerm_container_group.aci.fqdn
 }
