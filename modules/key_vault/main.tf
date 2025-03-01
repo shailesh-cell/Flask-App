@@ -7,6 +7,8 @@ data "azurerm_key_vault" "existing" {
 # Create Key Vault only if it doesn't exist
 resource "azurerm_key_vault" "kv" {
   count               = length(data.azurerm_key_vault.existing.id) > 0 ? 0 : 1
+  app_name            = var.app_name
+  environment         = var.environment
   name                = "${var.app_name}-${var.environment}-kv"
   resource_group_name = var.resource_group_name
   location            = var.location
