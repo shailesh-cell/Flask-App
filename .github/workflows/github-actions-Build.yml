@@ -50,7 +50,7 @@ jobs:
       - name: Terraform Apply (Plan Only - Debugging)
         run: |
              export ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}
-             terraform plan -var="environment=${{ env.ENV }}" -out=tfplan
+             terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=tfplan
 
       - name: Extract ACR Name from Terraform
         run: |
