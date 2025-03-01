@@ -7,7 +7,7 @@ data "azurerm_container_registry" "existing" {
 # Create ACR only if it doesn't exist
 resource "azurerm_container_registry" "acr" {
   name                = "${var.app_name}acr${var.environment}"
-  count               = length(try(data.azurerm_container_registry.existing[0].id, "")) > 0 ? 0 : 1
+  count               = data.azurerm_container_registry.existing.id == "" ? 1 : 0
   resource_group_name      = var.resource_group_name
   location            = var.location
   sku                 = "Standard"
