@@ -11,7 +11,6 @@ module "key_vault" {
   environment           = var.environment
   location              = module.resource_group.rg_location
   tenant_id             = var.tenant_id
-  aci_identity_id       = module.aci.aci_identity_id   # ✅ Pass ACI ID
   resource_group        = module.resource_group.rg_name
   depends_on = [module.resource_group]
 }
