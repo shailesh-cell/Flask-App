@@ -1,7 +1,7 @@
 # Try to Fetch Existing Key Vault
 data "azurerm_key_vault" "existing" {
   name                = "${var.app_name}-${var.environment}-kv"
-  resource_group_name = var.resource_group_name
+  resource_group_name = module.resource_group.rg_name
   count               = 1
 }
 

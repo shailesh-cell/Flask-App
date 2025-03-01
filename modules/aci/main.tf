@@ -2,7 +2,7 @@
 resource "azurerm_container_group" "aci" {
   name                = "${var.app_name}-${var.environment}-aci"
   location            = module.resource_group.rg_location
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = module_resource_group.rg.name
   os_type             = "Linux"
 
   identity {
