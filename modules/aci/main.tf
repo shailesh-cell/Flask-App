@@ -1,9 +1,8 @@
-
-# Create ACI Container Group
+# Create ACI Container Group with Managed Identity
 resource "azurerm_container_group" "aci" {
   name                = "${var.app_name}-${var.environment}-aci"
-  location            = var.location
-  resource_group_name = var.resource_group_name
+  location            = module.resource_group.rg_location
+  resource_group_name = azurerm_resource_group.rg.name
   os_type             = "Linux"
 
   identity {
@@ -24,27 +23,16 @@ resource "azurerm_container_group" "aci" {
     environment_variables = {
       FLASK_ENV = var.environment
     }
-
-    secure_environment_variables = {
-      ACR_USERNAME = data.azurerm_key_vault_secret.acr_username.value
-      ACR_PASSWORD = data.azurerm_key_vault_secret.acr_password.value
-    }
   }
 
-  image_registry_credential {
-    server   = var.acr_login_server
-    username = data.azurerm_key_vault_secret.acr_username.value
-    password = data.azurerm_key_vault_secret.acr_password.value
-  }
-
-  dns_name_label = "${var.app_name}-${var.environment}"
-  ip_address_type = "Public"
+  dns_name_label    = "${var.app_name}-${var.environment}"
+  ip_address_type   = "Public"
 }
 
-# Assign ACI Access to ACR (if RBAC is needed)
+# Assign ACI Access to ACR using Managed Identity
 resource "azurerm_role_assignment" "aci_acr_pull" {
-  principal_id         = module.aci.aci_identity_id
+  principal_id         = azurerm_container_group.aci.identity[0].principal_id
   role_definition_name = "AcrPull"
-  scope                = module.acr.acr_id
-  depends_on           = [module.aci]
+  scope                = var.acr_id
+  depends_on           = [azurerm_container_group.aci]
 }

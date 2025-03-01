@@ -1,24 +1,22 @@
-# Check if ACR already exists
+# Try to Fetch Existing ACR
 data "azurerm_container_registry" "existing" {
   name                = "${var.app_name}acr${var.environment}"
-  resource_group_name = var.resource_group_name
+  resource_group_name = module.resource_group.rg_name
+  count               = 1
 }
 
 # Create ACR only if it doesn't exist
 resource "azurerm_container_registry" "acr" {
-  count               = length(data.azurerm_container_registry.existing.id) > 0 ? 0 : 1
+  count               = length(try(data.azurerm_container_registry.existing[0].id, "")) > 0 ? 0 : 1
   name                = "${var.app_name}acr${var.environment}"
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  sku                = "Standard"
-  admin_enabled      = true
+  resource_group_name = module.resource_group.rg_name
+  location            = module.resource_group.rg_location
+  sku                 = "Standard"
+  admin_enabled       = false  # ❌ No need for admin credentials with Managed Identity
 }
 
-# Local variable to get the ACR ID (existing or new)
+# Local Variables for ACR Details
 locals {
-  acr_id       = coalesce(data.azurerm_container_registry.existing.id, try(azurerm_container_registry.acr[0].id, null))
-  acr_name     = coalesce(data.azurerm_container_registry.existing.name, try(azurerm_container_registry.acr[0].name, null))
-  acr_login    = coalesce(data.azurerm_container_registry.existing.admin_username, try(azurerm_container_registry.acr[0].admin_username, null))
-  acr_password = coalesce(data.azurerm_container_registry.existing.admin_password, try(azurerm_container_registry.acr[0].admin_password, null))
+  acr_id   = coalesce(try(data.azurerm_container_registry.existing[0].id, null), try(azurerm_container_registry.acr[0].id, null))
+  acr_name = coalesce(try(data.azurerm_container_registry.existing[0].name, null), try(azurerm_container_registry.acr[0].name, null))
 }
-
