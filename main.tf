@@ -1,7 +1,7 @@
 module "resource_group" {
   source      = "./modules/resource_group"
   app_name    = var.app_name
-  name     = "${var.app_name}-${var.environment}-rg"
+  rg_name     = "${var.app_name}-${var.environment}-rg"
   environment = var.environment
   location    = var.location
 }
