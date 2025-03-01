@@ -13,7 +13,7 @@ variable "location" {
   type        = string
 }
 
-variable "resource_group_name" {
+variable "resource_group" {
   description = "Resource group name"
   type        = string
 }
@@ -38,11 +38,6 @@ variable "container_port" {
   description = "Port to expose for the Flask app"
   type        = number
   default     = 5000
-}
-
-variable "key_vault_id" {
-  description = "Azure Key Vault ID"
-  type        = string
 }
 
 variable "aci_identity_id" {
