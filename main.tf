@@ -14,6 +14,12 @@ module "key_vault" {
   terraform_spn_object_id = var.terraform_spn_object_id
   aci_identity_id       = module.aci.aci_identity_id   # ✅ Pass ACI ID
   resource_group_name   = module.resource_group.resource_group_name
+  depends_on = [module.resource_group]
+}
+
+data "azurerm_key_vault_secret" "acr_password" {
+  name         = "acr-password"
+  key_vault_id = module.key_vault.key_vault.id
 }
 
 module "acr" {
@@ -23,7 +29,9 @@ module "acr" {
   location            = var.location
   resource_group_name = module.resource_group.resource_group_name
   key_vault_id        = module.key_vault.key_vault.id
-  acr_password        = module.acr.acr_password
+  acr_password        = data.azurerm_key_vault_secret.acr_password.value 
+ 
+  depends_on = [module.resource_group]
 }
 
 module "aci" {
@@ -36,4 +44,6 @@ module "aci" {
   acr_login_server    = module.acr.login_server
   key_vault_id        = module.keyvault.id
   aci_identity_id     = module.acr.identity_id
+
+  depends_on = [module.acr, module.key_vault]
 }

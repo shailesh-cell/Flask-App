@@ -18,7 +18,7 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        
+
       - name: Set ENV Based on Branch
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
@@ -44,13 +44,19 @@ jobs:
 
       - name: Terraform Init
         run: |
-             export ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}
-             terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
+          if [ ! -f envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend ]; then
+            echo "Backend file not found!"
+            exit 1
+          fi
+          terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
 
       - name: Terraform Apply (Plan Only - Debugging)
         run: |
-             export ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}
-             terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=tfplan
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve tfplan
 
       - name: Extract ACR Name from Terraform
         run: |
@@ -72,21 +78,16 @@ jobs:
           echo "ACR Login Server: $ACR_LOGIN"
           echo "ACR_LOGIN_SERVER=$ACR_LOGIN" >> $GITHUB_ENV
 
-      - name: Debug - Check ACR Credentials in Key Vault
+      - name: Log in to Azure Container Registry
         run: |
-          echo "Retrieving ACR credentials from Key Vault..."
-          az keyvault secret show --name "${{ env.ACR_NAME }}-acr-username" --vault-name my-keyvault || echo "Secret not found"
-          az keyvault secret show --name "${{ env.ACR_NAME }}-acr-password" --vault-name my-keyvault || echo "Secret not found"
+          az acr login --name $ACR_NAME --expose-token
 
       - name: Build and Tag Image
         run: |
-          echo "Building Docker image..."
-          docker build -t $ACR_LOGIN_SERVER/flask-app:${{ github.sha }} -f app/Dockerfile .
+          docker build -t $ACR_LOGIN_SERVER/flask-app:${{ github.sha }} -f ./app/Dockerfile ./app
 
       - name: Push Image to ACR
         run: |
-          echo "Logging into ACR..."
-          az acr login --name $ACR_NAME
           echo "Pushing Docker image..."
           docker push $ACR_LOGIN_SERVER/flask-app:${{ github.sha }}
 

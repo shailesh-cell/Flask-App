@@ -22,3 +22,13 @@ variable "resource_group_name" {
   description = "The name of the Azure Resource Group"
   type        = string
 }
+
+variable "image_tag" {
+  description = "The tag of the container image"
+  type        = string
+}
+
+variable "acr_username" {
+  description = "Username for Azure Container Registry"
+  type        = string
+}
