@@ -9,8 +9,8 @@ data "azurerm_container_registry" "existing" {
 resource "azurerm_container_registry" "acr" {
   count               = length(try(data.azurerm_container_registry.existing[0].id, "")) > 0 ? 0 : 1
   name                = "${var.app_name}acr${var.environment}"
-  resource_group_name      = module.resource_group.rg_name
-  location            = module.resource_group.rg_location
+  resource_group_name      = var.resource_group_name
+  location            = var.location
   sku                 = "Standard"
   admin_enabled       = false  # ❌ No need for admin credentials with Managed Identity
 }

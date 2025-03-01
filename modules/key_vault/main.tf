@@ -7,8 +7,8 @@ data "azurerm_key_vault" "existing" {
 
 resource "azurerm_key_vault" "kv" {
   name                = "${var.app_name}-${var.environment}-kv"
-  resource_group_name      = module_resource_group.rg_name
-  location            = module.resource_group.rg_location
+  resource_group_name      = var.resource_group_name
+  location            = var.location
   sku_name            = "standard"
   tenant_id           = var.tenant_id
 }
