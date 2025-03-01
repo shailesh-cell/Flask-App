@@ -19,7 +19,8 @@ variable "resource_group_name" {
 }
 
 variable "acr_name" {
-  description = "Name of the Azure Container Registry"
+  description = "The name of the Azure Container Registry (if exists, use it)"
   type        = string
-}
+  default     = null  # Allow null to auto-generate
+
 
