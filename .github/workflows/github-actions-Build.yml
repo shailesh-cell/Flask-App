@@ -38,13 +38,6 @@ jobs:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-            
-      - name: Debug - Check Environment Variables
-        run: |
-          echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}"
-          echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}"
-          echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}"  
-
 
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
@@ -55,11 +48,12 @@ jobs:
              terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
 
       - name: Terraform Apply (Plan Only - Debugging)
-        run: terraform plan -var="environment=${{ env.ENV }}" -out=tfplan
+        run: |
+             export ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}
+             terraform plan -var="environment=${{ env.ENV }}" -out=tfplan
 
       - name: Extract ACR Name from Terraform
         run: |
-          export ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}
           ACR_NAME=$(terraform output -raw acr_name || echo "ERROR")
           if [[ "$ACR_NAME" == "ERROR" ]]; then
             echo "Terraform output failed. Exiting."
