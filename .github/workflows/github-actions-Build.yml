@@ -50,7 +50,9 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
+        run: |
+             export ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}
+             terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
 
       - name: Terraform Apply (Plan Only - Debugging)
         run: terraform plan -var="environment=${{ env.ENV }}" -out=tfplan
