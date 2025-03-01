@@ -22,15 +22,3 @@ locals {
   acr_password = coalesce(data.azurerm_container_registry.existing.admin_password, try(azurerm_container_registry.acr[0].admin_password, null))
 }
 
-# Store ACR Credentials in Key Vault
-resource "azurerm_key_vault_secret" "acr_username" {
-  name         = "${var.app_name}-acr-username"
-  value        = local.acr_login
-  key_vault_id = var.key_vault_id
-}
-
-resource "azurerm_key_vault_secret" "acr_password" {
-  name         = "${var.app_name}-acr-password"
-  value        = local.acr_password
-  key_vault_id = var.key_vault_id
-}

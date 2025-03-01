@@ -35,7 +35,7 @@ locals {
 
 # Assign RBAC for ACI to access Key Vault secrets
 resource "azurerm_role_assignment" "aci_kv_access" {
-  scope                = local.key_vault_id
+  scope                = module.key_vault.key_vault_id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = module.aci.aci_identity_id
 

@@ -6,6 +6,10 @@ resource "azurerm_container_group" "aci" {
   resource_group_name = var.resource_group_name
   os_type             = "Linux"
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   container {
     name   = var.app_name
     image  = "${var.acr_login_server}/${var.app_name}:${var.image_tag}"
