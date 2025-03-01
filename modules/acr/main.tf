@@ -1,7 +1,7 @@
 # Try to Fetch Existing ACR
 data "azurerm_container_registry" "existing" {
   name                = "${var.app_name}acr${var.environment}"
-  resource_group_name      = var.resource_group.rg_name
+  resource_group_name      = var.resource_group_name
   count               = 1
 }
 

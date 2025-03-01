@@ -12,7 +12,7 @@ module "key_vault" {
   environment           = var.environment
   location              = module.resource_group.rg_location
   tenant_id             = var.tenant_id
-  resource_group_name        = module.resource_group.rg_name
+  resource_group_name  = module.resource_group.rg_name
   depends_on = [module.resource_group]
 }
 
@@ -20,8 +20,8 @@ module "acr" {
   source              = "./modules/acr"
   app_name            = var.app_name
   environment         = var.environment
-  location            = module.resource_group.rg_name
-  resource_group_name      = module.resource_group.rg_location
+  location            = module.resource_group.rg_location
+  resource_group_name  = module.resource_group.rg_name
  
   depends_on = [module.resource_group]
 }
