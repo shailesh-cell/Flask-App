@@ -22,5 +22,6 @@ variable "acr_name" {
   description = "The name of the Azure Container Registry (if exists, use it)"
   type        = string
   default     = null  # Allow null to auto-generate
+}
 
 
