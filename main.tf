@@ -1,6 +1,7 @@
 module "resource_group" {
   source      = "./modules/resource_group"
   app_name    = var.app_name
+  name     = "${var.app_name}-${var.environment}-rg"
   environment = var.environment
   location    = var.location
 }
@@ -19,8 +20,8 @@ module "acr" {
   source              = "./modules/acr"
   app_name            = var.app_name
   environment         = var.environment
-  location            = module.resource_group.rg_location
-  resource_group_name      = module.resource_group.rg_name
+  location            = module.resource_group.rg_name
+  resource_group_name      = module.resource_group.rg_location
  
   depends_on = [module.resource_group]
 }
