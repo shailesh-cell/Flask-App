@@ -1,6 +1,6 @@
-output "acr_id" {
+output "id" {
   description = "The ID of the Azure Container Registry"
-  value       = local.acr_id
+  value       = azurerm_container_registry.acr[0].id  # ✅ Add [0]
 }
 
 output "acr_name" {
@@ -8,9 +8,9 @@ output "acr_name" {
   value       = local.acr_name
 }
 
-output "acr_login_server" {
+output "login_server" {
   description = "The login server of the Azure Container Registry"
-  value       = "${local.acr_name}.azurecr.io"
+  value       = azurerm_container_registry.acr[0].login_server  # ✅ Add [0]
 }
 
 output "id" {
@@ -25,5 +25,5 @@ output "login_server" {
 
 output "name" {
   description = "The name of the Azure Container Registry"
-  value       = azurerm_container_registry.acr.name
+  value       = azurerm_container_registry.acr[0].name  # ✅ Add [0]
 }
