@@ -3,18 +3,18 @@ data "azurerm_container_registry" "existing" {
   resource_group_name = var.resource_group_name
 }
 
-resource "null_resource" "acr_creation" {
+resource "null_resource" "acr_check" {
   provisioner "local-exec" {
-    command = length(data.azurerm_container_registry.existing.id) == 0 ? "terraform apply -target=module.acr_creation" : "echo 'ACR already exists'"
+    command = length(data.azurerm_container_registry.existing.id) > 0 ? "echo ACR already exists" : "echo ACR does not exist, creating..."
   }
 
   triggers = {
-    acr_id = length(data.azurerm_container_registry.existing.id) == 0 ? "create" : "exists"
+    acr_id = length(data.azurerm_container_registry.existing.id) > 0 ? "exists" : "create"
   }
 }
 
 resource "azurerm_container_registry" "acr" {
-  depends_on = [null_resource.acr_creation]
+  depends_on = [null_resource.acr_check]
 
   name                = "${var.app_name}acr${var.environment}"
   resource_group_name = var.resource_group_name
@@ -23,8 +23,7 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = false  # ❌ No need for admin credentials with Managed Identity
 }
 
-# Use the coalesce function to get the ACR ID and name
 locals {
-  acr_id   = coalesce(data.azurerm_container_registry.existing.id, azurerm_container_registry.acr[0].id)
-  acr_name = coalesce(data.azurerm_container_registry.existing.name, azurerm_container_registry.acr[0].name)
+  acr_id   = coalesce(data.azurerm_container_registry.existing.id, azurerm_container_registry.acr.id)
+  acr_name = coalesce(data.azurerm_container_registry.existing.name, azurerm_container_registry.acr.name)
 }
