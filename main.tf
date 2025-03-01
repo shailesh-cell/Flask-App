@@ -11,9 +11,8 @@ module "key_vault" {
   environment           = var.environment
   location              = module.resource_group.rg_location
   tenant_id             = var.tenant_id
-  terraform_spn_object_id = var.terraform_spn_object_id
   aci_identity_id       = module.aci.aci_identity_id   # ✅ Pass ACI ID
-  resource_group_name   = module.resource_group.rg_name
+  resource_group        = module.resource_group.rg_name
   depends_on = [module.resource_group]
 }
 
@@ -22,7 +21,7 @@ module "acr" {
   app_name            = var.app_name
   environment         = var.environment
   location            = module.resource_group.rg_location
-  resource_group_name = module.resource_group.rg_name
+  resource_group      = module.resource_group.rg_name
  
   depends_on = [module.resource_group]
 }
@@ -32,11 +31,10 @@ module "aci" {
   app_name            = var.app_name
   environment         = var.environment
   location            = module.resource_group.rg_location
-  resource_group_name = module.resource_group.rg_name
+  resource_group      = module.resource_group.rg_name
   acr_id              = module.acr.id
   acr_login_server    = module.acr.login_server
   key_vault_id        = module.keyvault.id
-  aci_identity_id     = module.acr.identity_id
 
   depends_on = [module.acr, module.key_vault]
 }
