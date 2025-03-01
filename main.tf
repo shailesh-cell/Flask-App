@@ -12,6 +12,7 @@ module "acr" {
   location           = var.location
   resource_group_name = module.keyvault.resource_group_name
   key_vault_id        = module.keyvault.id
+  acr_password        = module.acr_password
 }
 
 module "aci" {
