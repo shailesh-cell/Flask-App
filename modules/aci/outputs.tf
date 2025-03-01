@@ -1,4 +1,4 @@
-output name" {
+output "name" {
   description = "The name of the ACI instance"
   value       = azurerm_container_group.aci.name
 }
