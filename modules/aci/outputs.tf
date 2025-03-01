@@ -12,3 +12,8 @@ output "aci_ip" {
   description = "The public IP address of the ACI"
   value       = azurerm_container_group.aci.ip_address
 }
+
+output "aci_identity_id" {
+  description = "The ID of the ACI Managed Identity"
+  value       = azurerm_container_group.aci.identity[0].principal_id
+}
