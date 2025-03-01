@@ -1,8 +1,8 @@
 # Create ACI Container Group with Managed Identity
 resource "azurerm_container_group" "aci" {
   name                = "${var.app_name}-${var.environment}-aci"
-  location            = module.resource_group.rg_location
-  resource_group_name = module_resource_group.rg.name
+  location            = var.location
+  resource_group_name = var.resource_group_name
   os_type             = "Linux"
 
   identity {
