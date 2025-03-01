@@ -1,13 +1,13 @@
 # Try to Fetch Existing ACR
 data "azurerm_container_registry" "existing" {
-  name                = "${var.app_name}acr${var.environment}"
+  name                = var.acr_name
   resource_group_name      = var.resource_group_name
   count               = 1
 }
 
 # Create ACR only if it doesn't exist
 resource "azurerm_container_registry" "acr" {
-  count               = length(try(data.azurerm_container_registry.existing[*].id, [])) > 0 ? 0 : 1
+  count               = length(try(data.azurerm_container_registry.existing.id, "")) > 0 ? 0 : 1
   name                = "${var.app_name}acr${var.environment}"
   resource_group_name      = var.resource_group_name
   location            = var.location
