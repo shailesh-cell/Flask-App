@@ -65,13 +65,19 @@ variable "subscription_id" {
   type        = string
 }
 
-variable "acr_username" {
-  description = "The username for the Azure Container Registry."
-  type        = string
-}
-
-
 variable "container_port" {
   description = "The port on which the container listens."
   type        = number
+}
+
+variable "acr_username" {
+  description = "The username for the Azure Container Registry"
+  type        = string
+  default     = "dummy-username"
+}
+
+variable "acr_password" {
+  description = "The password for the Azure Container Registry"
+  type        = string
+  default     = "dummy-password"
 }
