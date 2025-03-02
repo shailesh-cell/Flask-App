@@ -41,5 +41,5 @@ output "aci_fqdn" {
 }
 
 output "key_vault_id" {
-  value = module.key_vault.kv.id
+  value = module.key_vault.key_vault_id
 }
