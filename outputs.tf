@@ -39,3 +39,7 @@ output "aci_name" {
 output "aci_fqdn" {
   value = module.aci.aci_fqdn
 }
+
+output "key_vault_id" {
+  value = module.key_vault.kv.id
+}
