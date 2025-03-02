@@ -1,5 +1,10 @@
-variable "acr_name" {
-  description = "The name of the Azure Container Registry."
+variable "app_name" {
+  description = "The name of the application."
+  type        = string
+}
+
+variable "environment" {
+  description = "The environment (e.g., dev, staging, prod)."
   type        = string
 }
 

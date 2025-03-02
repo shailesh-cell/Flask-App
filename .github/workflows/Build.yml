@@ -47,9 +47,15 @@ jobs:
           fi
           terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
 
-      - name: Terraform Apply (Plan Only - Debugging)
+      - name: Terraform Plan
         run: |
           terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan
+
+      - name: Store Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: tfplan
 
       - name: Terraform Apply
         run: |
@@ -92,4 +98,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: docker-image
-          path: app/Dockerfile
+          path: |
+            ./app/Dockerfile
+            ./app
+            ./app/docker-compose.yml

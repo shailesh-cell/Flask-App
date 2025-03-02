@@ -1,19 +1,14 @@
 variable "app_name" {
-  description = "Application name"
+  description = "The name of the application."
   type        = string
 }
 
 variable "environment" {
-  description = "Deployment environment"
+  description = "The environment (e.g., dev, staging, prod)."
   type        = string
 }
 
 variable "location" {
-  description = "Azure region"
-  type        = string
-}
-
-variable "rg_name" {
-  description = "Name of the resource group"
+  description = "The location where the resource group will be created."
   type        = string
 }

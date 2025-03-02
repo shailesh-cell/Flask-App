@@ -1,7 +1,6 @@
 module "resource_group" {
   source      = "./modules/resource_group"
-  app_name    = var.app_name
-  rg_name     = "${var.app_name}-${var.environment}-rg"
+  rg_name     = var.rg_name
   environment = var.environment
   location    = var.location
 }
@@ -30,7 +29,7 @@ module "aci" {
   app_name            = var.app_name
   environment         = var.environment
   location            = module.resource_group.rg_location
-  resource_group_name      = module.resource_group.rg_name
+  resource_group_name = module.resource_group.rg_name
   acr_id              = module.acr.id
   acr_login_server    = module.acr.login_server
   aci_identity_id     = module.aci.aci_identity_id
