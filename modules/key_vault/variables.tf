@@ -38,6 +38,12 @@ variable "application_object_id" {
   type        = string
 }
 
-variable "acr_identity_principal_id" {
-  description = "The principal ID of the ACR's managed identity"
+variable "spn_object_id" {
+  description = "Service Principal Object ID to grant access to Key Vault"
+  type        = string
+}
+
+variable "acr_identity_object_id" {
+  description = "Managed Identity Object ID of ACR to grant access to Key Vault"
+  type        = string
 }
