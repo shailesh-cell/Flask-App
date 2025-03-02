@@ -30,6 +30,6 @@ resource "azurerm_container_registry" "acr" {
 }
 
 locals {
-  acr_id   = coalesce(try(data.azurerm_container_registry.existing.id, null), azurerm_container_registry.acr[*].id[0])
-  acr_name = coalesce(try(data.azurerm_container_registry.existing.name, null), azurerm_container_registry.acr[*].name[0])
+  acr_exists = length(data.azurerm_container_registry.existing) > 0
+  create_acr = [for name in azurerm_container_registry.acr : name]
 }

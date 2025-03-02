@@ -1,11 +1,11 @@
-output "acr_id" {
-  value = local.acr_exists ? data.azurerm_container_registry.existing.id : null
+output "id" {
+  value = azurerm_container_registry.acr.id
 }
 
-output "acr_name" {
-  value = local.acr_exists ? data.azurerm_container_registry.existing.name : null
+output "name" {
+  value = azurerm_container_registry.acr.name
 }
 
 output "login_server" {
-  value = local.acr_exists ? data.azurerm_container_registry.existing.login_server : null
+  value = azurerm_container_registry.acr.login_server
 }
