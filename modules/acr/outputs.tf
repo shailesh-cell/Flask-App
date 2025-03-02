@@ -19,3 +19,7 @@ output "admin_password" {
   value = azurerm_container_registry.acr.admin_password
 }
 
+output "acr_identity_principal_id" {
+  value = azurerm_container_registry.acr.identity.principal_id
+}
+

@@ -21,7 +21,7 @@ resource "azurerm_key_vault" "kv" {
 
   access_policy {
     tenant_id = var.tenant_id
-    object_id = var.application_object_id
+    object_id = var.acr_identity_principal_id
 
     secret_permissions = [
       "get",

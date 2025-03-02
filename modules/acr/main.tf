@@ -6,6 +6,10 @@ resource "azurerm_container_registry" "acr" {
   location            = var.location
   sku                 = var.sku
   admin_enabled       = true
+
+  identity {
+    type = "SystemAssigned"
+  }
 }
 
 data "azurerm_container_registry" "acr" {
