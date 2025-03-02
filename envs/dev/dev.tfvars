@@ -1,7 +1,7 @@
 app_name              = "flaskapp"
 environment          = "dev"
 location            = "CentralIndia"
-resource_group_name = "flaskapp-dev-rg"
+rg_name              = "flaskapp-dev-rg"
 image_tag           = "latest"
 acr_username        = "flaskappacrdev"
 subscription_id     = "a6435a3c-312e-41ed-878b-3118525f919a"
