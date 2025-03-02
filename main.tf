@@ -32,7 +32,8 @@ module "aci" {
   resource_group_name = module.resource_group.rg_name
   acr_id              = module.acr.id
   acr_login_server    = module.acr.login_server
-  aci_identity_id     = module.aci.aci_identity_id
+  image_tag           = var.image_tag
+  container_port      = var.container_port
 
   depends_on = [module.acr, module.key_vault]
 }
