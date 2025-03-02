@@ -23,6 +23,7 @@ module "acr" {
   environment           = var.environment
   location            = module.resource_group.rg_location
   resource_group_name  = module.resource_group.rg_name
+  key_vault_id           = module.key_vault.key_vault_id
  
   depends_on = [module.resource_group]
 }

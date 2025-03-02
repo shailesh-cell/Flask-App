@@ -29,3 +29,8 @@ variable "admin_enabled" {
   type        = bool
   default     = false
 }
+
+variable "key_vault_id" {
+  description = "The ID of the Key Vault"
+  type        = string
+}
