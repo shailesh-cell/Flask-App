@@ -39,13 +39,24 @@ jobs:
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform Init
+      - name: Validate Terraform Formatting
+        run: |
+          terraform fmt -recursive -check || exit 1
+
+      - name: Initialize Terraform
         run: |
           if [ ! -f envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend ]; then
             echo "Backend file not found!"
             exit 1
           fi
           terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
+
+      - name: Validate All Terraform Modules
+        run: |
+          for module in $(find . -type d -name "*.tf" -exec dirname {} \; | sort -u); do
+            echo "Validating Terraform module in $module"
+            (cd "$module" && terraform validate) || exit 1
+          done
 
       - name: Terraform Plan
         run: |
@@ -56,49 +67,3 @@ jobs:
         with:
           name: terraform-plan
           path: tfplan
-
-      - name: Terraform Apply
-        run: |
-          terraform apply -auto-approve tfplan
-
-      - name: Extract ACR Name from Terraform
-        run: |
-          ACR_NAME=$(terraform output -raw acr_name || echo "ERROR")
-          if [[ "$ACR_NAME" == "ERROR" ]]; then
-            echo "Terraform output failed. Exiting."
-            exit 1
-          fi
-          echo "Extracted ACR Name: $ACR_NAME"
-          echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
-
-      - name: Get ACR Login Server
-        run: |
-          ACR_LOGIN=$(az acr show --name $ACR_NAME --query loginServer --output tsv || echo "ERROR")
-          if [[ "$ACR_LOGIN" == "ERROR" ]]; then
-            echo "Failed to retrieve ACR login server. Exiting."
-            exit 1
-          fi
-          echo "ACR Login Server: $ACR_LOGIN"
-          echo "ACR_LOGIN_SERVER=$ACR_LOGIN" >> $GITHUB_ENV
-
-      - name: Log in to Azure Container Registry
-        run: |
-          az acr login --name $ACR_NAME --expose-token
-
-      - name: Build and Tag Image
-        run: |
-          docker build -t $ACR_LOGIN_SERVER/flask-app:${{ github.sha }} -f ./flask-app/Dockerfile ./flask-app
-
-      - name: Push Image to ACR
-        run: |
-          echo "Pushing Docker image..."
-          docker push $ACR_LOGIN_SERVER/flask-app:${{ github.sha }}
-
-      - name: Store Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-image
-          path: |
-            ./flask-app/Dockerfile
-            ./flask-app
-            ./flask-app/docker-compose.yml
