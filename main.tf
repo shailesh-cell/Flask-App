@@ -18,8 +18,7 @@ module "key_vault" {
 
 module "acr" {
   source              = "./modules/acr"
-  app_name            = var.app_name
-  environment         = var.environment
+  acr_name            = var.app_name
   location            = module.resource_group.rg_location
   resource_group_name  = module.resource_group.rg_name
  
@@ -28,7 +27,7 @@ module "acr" {
 
 module "aci" {
   source              = "./modules/aci"
-  app_name            = var.app_name
+  aci_name            = var.app_name
   environment         = var.environment
   location            = module.resource_group.rg_location
   resource_group_name      = module.resource_group.rg_name
