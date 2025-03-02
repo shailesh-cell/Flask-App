@@ -18,7 +18,6 @@ resource "azurerm_key_vault" "kv" {
   lifecycle {
     ignore_changes = [sku_name, tenant_id]
   }
-}
 
   access_policy {
     tenant_id = var.tenant_id
