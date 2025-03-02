@@ -33,3 +33,8 @@ variable "acr_password" {
   type        = string
 }
 
+variable "application_object_id" {
+  description = "The object ID of the application"
+  type        = string
+}
+

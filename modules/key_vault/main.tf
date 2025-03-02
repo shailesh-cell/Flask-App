@@ -11,10 +11,23 @@ resource "azurerm_key_vault" "kv" {
   location            = var.location
   sku_name            = "standard"
   tenant_id           = var.tenant_id
+  soft_delete_enabled         = true
+  purge_protection_enabled    = true
 
   # Use existing key vault if found
   lifecycle {
     ignore_changes = [sku_name, tenant_id]
+  }
+}
+
+  access_policy {
+    tenant_id = var.tenant_id
+    object_id = var.application_object_id
+
+    secret_permissions = [
+      "get",
+      "set",
+    ]
   }
 }
 

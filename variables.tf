@@ -81,3 +81,8 @@ variable "acr_password" {
   type        = string
   default     = "dummy-password"
 }
+
+variable "application_object_id" {
+  description = "The object ID of the application"
+  type        = string
+}

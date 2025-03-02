@@ -14,6 +14,7 @@ module "key_vault" {
   resource_group_name  = module.resource_group.rg_name
   acr_password         = var.acr_password
   acr_username         = var.acr_username
+  application_object_id  = var.application_object_id
   depends_on = [module.resource_group]
 }
 
