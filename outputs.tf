@@ -33,9 +33,9 @@ output "aci_identity_principal_id" {
 }
 
 output "aci_name" {
-  value = module.aci.name
+  value = module.aci.aci_name
 }
 
 output "aci_fqdn" {
-  value = module.aci.fqdn
+  value = module.aci.aci_fqdn
 }
