@@ -23,6 +23,11 @@ variable "app_name" {
   type        = string
 }
 
+variable "image_tag" {
+  description = "The tag for the container image."
+  type        = string
+}
+
 # Variables for ACR Module
 variable "acr_sku" {
   description = "The SKU of the ACR."
@@ -53,4 +58,14 @@ variable "aci_memory" {
   description = "The amount of memory for the Azure Container Instance in GB."
   type        = number
   default     = 1.5
+}
+
+variable "subscription_id" {
+  description = "The subscription ID for the Azure subscription."
+  type        = string
+}
+
+variable "acr_username" {
+  description = "The username for the Azure Container Registry."
+  type        = string
 }
