@@ -18,6 +18,20 @@ module "key_vault" {
   depends_on = [module.resource_group]
 }
 
+# Ensure Key Vault depends on ACR
+resource "azurerm_key_vault_access_policy" "acr_access_policy" {
+  key_vault_id = module.key_vault.key_vault_id
+  tenant_id = var.tenant_id
+  object_id = module.acr.acr_identity_principal_id
+
+  secret_permissions = [
+    "get",
+    "set",
+  ]
+
+  depends_on = [module.acr]
+}
+
 module "acr" {
   source              = "./modules/acr"
   app_name            = var.app_name

@@ -38,3 +38,6 @@ variable "application_object_id" {
   type        = string
 }
 
+variable "acr_identity_principal_id" {
+  description = "The principal ID of the ACR's managed identity"
+}
