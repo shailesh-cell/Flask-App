@@ -7,3 +7,20 @@ resource "azurerm_container_registry" "acr" {
   sku                 = var.sku
   admin_enabled       = var.admin_enabled
 }
+
+data "azurerm_container_registry" "acr" {
+  name                = azurerm_container_registry.acr.name
+  resource_group_name = azurerm_resource_group.rg.resource_group_name
+}
+
+resource "azurerm_key_vault_secret" "acr_username" {
+  name         = "acr-username"
+  value        = data.azurerm_container_registry.acr.admin_username
+  key_vault_id = azurerm_key_vault.kv.id
+}
+
+resource "azurerm_key_vault_secret" "acr_password" {
+  name         = "acr-password"
+  value        = data.azurerm_container_registry.acr.admin_password
+  key_vault_id = azurerm_key_vault.kv.id
+}

@@ -17,3 +17,15 @@ resource "azurerm_key_vault" "kv" {
     ignore_changes = [sku_name, tenant_id]
   }
 }
+
+resource "azurerm_key_vault_secret" "acr_username" {
+  name         = "acr-username"
+  value        = "dummy-username"
+  key_vault_id = azurerm_key_vault.kv.id
+}
+
+resource "azurerm_key_vault_secret" "acr_password" {
+  name         = "acr-password"
+  value        = "dummy-password"
+  key_vault_id = azurerm_key_vault.kv.id
+}
