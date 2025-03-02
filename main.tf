@@ -27,7 +27,7 @@ module "acr" {
 
 module "aci" {
   source              = "./modules/aci"
-  aci_name            = var.app_name
+  app_name            = var.app_name
   environment         = var.environment
   location            = module.resource_group.rg_location
   resource_group_name      = module.resource_group.rg_name
