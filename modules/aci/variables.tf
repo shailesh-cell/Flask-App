@@ -4,7 +4,7 @@ variable "app_name" {
 }
 
 variable "environment" {
-  description = "The environment (e.g., dev, staging, prod)."
+  description = "The environment (e.g., dev, uat, prod)."
   type        = string
 }
 
@@ -29,23 +29,11 @@ variable "acr_login_server" {
 }
 
 variable "image_tag" {
-  description = "The image tag for the container."
+  description = "The tag for the container image."
   type        = string
 }
 
 variable "container_port" {
   description = "The port on which the container listens."
   type        = number
-}
-
-variable "aci_cpu" {
-  description = "The number of CPUs for the Azure Container Instance."
-  type        = number
-  default     = 1
-}
-
-variable "aci_memory" {
-  description = "The amount of memory for the Azure Container Instance in GB."
-  type        = number
-  default     = 1.5
 }

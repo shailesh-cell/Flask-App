@@ -69,3 +69,9 @@ variable "acr_username" {
   description = "The username for the Azure Container Registry."
   type        = string
 }
+
+
+variable "container_port" {
+  description = "The port on which the container listens."
+  type        = number
+}
