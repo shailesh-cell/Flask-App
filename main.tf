@@ -12,6 +12,8 @@ module "key_vault" {
   location              = module.resource_group.rg_location
   tenant_id             = var.tenant_id
   resource_group_name  = module.resource_group.rg_name
+  acr_password         = var.acr_password
+  acr_username         = var.acr_username
   depends_on = [module.resource_group]
 }
 
