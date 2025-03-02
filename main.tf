@@ -1,6 +1,6 @@
 module "resource_group" {
   source      = "./modules/resource_group"
-  rg_name     = var.rg_name
+  app_name    = var.app_name
   environment = var.environment
   location    = var.location
 }
@@ -32,8 +32,7 @@ module "aci" {
   resource_group_name = module.resource_group.rg_name
   acr_id              = module.acr.id
   acr_login_server    = module.acr.login_server
-  image_tag           = var.image_tag
-  container_port      = var.container_port
+  aci_identity_id     = module.aci.aci_identity_id
 
   depends_on = [module.acr, module.key_vault]
 }
