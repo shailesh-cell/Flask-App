@@ -1,3 +1,5 @@
+# module aci
+
 # Create ACI Container Group with Managed Identity
 resource "azurerm_container_group" "aci" {
   name                = "${var.app_name}-${var.environment}-aci"
@@ -34,5 +36,4 @@ resource "azurerm_role_assignment" "aci_acr_pull" {
   principal_id         = azurerm_container_group.aci.identity[0].principal_id
   role_definition_name = "AcrPull"
   scope                = var.acr_id
-  depends_on           = [azurerm_container_group.aci]
 }
