@@ -31,7 +31,7 @@ module "aci" {
   environment         = var.environment
   location            = module.resource_group.rg_location
   resource_group_name = module.resource_group.rg_name
-  acr_id              = module.acr.id
+  acr_id              = module.acr.acr_id
   acr_login_server    = module.acr.login_server
   image_tag           = var.image_tag
   container_port      = var.container_port

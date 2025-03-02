@@ -75,3 +75,8 @@ variable "container_port" {
   description = "The port on which the container listens."
   type        = number
 }
+
+variable "acr_id" {
+  description = "The port on which the container listens."
+  type        = number
+}
