@@ -10,7 +10,7 @@ resource "azurerm_container_registry" "acr" {
 
 data "azurerm_container_registry" "acr" {
   name                = azurerm_container_registry.acr.name
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = var.resource_group_name
 }
 
 resource "azurerm_key_vault_secret" "acr_username" {

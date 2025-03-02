@@ -87,7 +87,7 @@ jobs:
 
       - name: Build and Tag Image
         run: |
-          docker build -t $ACR_LOGIN_SERVER/flask-app:${{ github.sha }} -f ./app/Dockerfile ./app
+          docker build -t $ACR_LOGIN_SERVER/flask-app:${{ github.sha }} -f ./flask-app/Dockerfile ./flask-app
 
       - name: Push Image to ACR
         run: |
@@ -99,6 +99,6 @@ jobs:
         with:
           name: docker-image
           path: |
-            ./app/Dockerfile
-            ./app
-            ./app/docker-compose.yml
+            ./flask-app/Dockerfile
+            ./flask-app
+            ./flask-app/docker-compose.yml
