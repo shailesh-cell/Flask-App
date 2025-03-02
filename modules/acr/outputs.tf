@@ -9,4 +9,3 @@ output "acr_name" {
 output "login_server" {
   value = local.acr_exists ? data.azurerm_container_registry.existing.login_server : (length(local.create_acr) > 0 ? azurerm_container_registry.acr.values().*login_server[0] : null)
 }
-
