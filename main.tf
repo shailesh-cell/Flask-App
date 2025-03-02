@@ -6,27 +6,29 @@ module "resource_group" {
 }
 
 module "key_vault" {
-  source                = "./modules/key_vault"
-  app_name              = var.app_name
-  environment           = var.environment
-  location              = module.resource_group.rg_location
-  tenant_id             = var.tenant_id
-  resource_group_name  = module.resource_group.rg_name
-  acr_password         = var.acr_password
-  acr_username         = var.acr_username
-  acr_identity_principal_id = module.acr.acr_identity_principal_id
-  depends_on = [module.resource_group]
+  source                    = "./modules/key_vault"
+  app_name                  = var.app_name
+  environment               = var.environment
+  location                  = module.resource_group.rg_location
+  tenant_id                 = var.tenant_id
+  resource_group_name       = module.resource_group.rg_name
+  acr_password              = var.acr_password
+  acr_username              = var.acr_username
+  acr_identity_object_id    = module.acr.acr_identity_principal_id
+  application_object_id                 = var.spn_object_id
+  spn_object_id                 = var.spn_object_id
+  depends_on                = [module.resource_group]
 }
 
 # Ensure Key Vault depends on ACR
 resource "azurerm_key_vault_access_policy" "acr_access_policy" {
   key_vault_id = module.key_vault.key_vault_id
-  tenant_id = var.tenant_id
-  object_id = module.acr.acr_identity_principal_id
+  tenant_id    = var.tenant_id
+  object_id    = module.acr.acr_identity_principal_id
 
   secret_permissions = [
-    "get",
-    "set",
+    "Get",
+    "Set",
   ]
 
   depends_on = [module.acr]
@@ -35,11 +37,11 @@ resource "azurerm_key_vault_access_policy" "acr_access_policy" {
 module "acr" {
   source              = "./modules/acr"
   app_name            = var.app_name
-  environment           = var.environment
+  environment         = var.environment
   location            = module.resource_group.rg_location
-  resource_group_name  = module.resource_group.rg_name
-  key_vault_id           = module.key_vault.key_vault_id
- 
+  resource_group_name = module.resource_group.rg_name
+  key_vault_id        = module.key_vault.key_vault_id
+
   depends_on = [module.resource_group]
 }
 

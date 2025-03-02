@@ -27,8 +27,8 @@ resource "azurerm_container_group" "aci" {
     }
   }
 
-  dns_name_label    = "${var.app_name}-${var.environment}"
-  ip_address_type   = "Public"
+  dns_name_label  = "${var.app_name}-${var.environment}"
+  ip_address_type = "Public"
 }
 
 # Assign ACI Access to ACR using Managed Identity

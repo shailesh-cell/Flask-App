@@ -1,13 +1,12 @@
 # Key Vault Module
 
 resource "azurerm_key_vault" "kv" {
-  name                        = "${var.app_name}-${var.environment}-kv"
-  resource_group_name         = var.resource_group_name
-  location                    = var.location
-  sku_name                    = "standard"
-  tenant_id                   = var.tenant_id
-  soft_delete_enabled         = true
-  purge_protection_enabled    = true
+  name                     = "${var.app_name}-${var.environment}-kv"
+  resource_group_name      = var.resource_group_name
+  location                 = var.location
+  sku_name                 = "standard"
+  tenant_id                = var.tenant_id
+  purge_protection_enabled = true
 
   lifecycle {
     ignore_changes = [sku_name, tenant_id]
@@ -21,6 +20,7 @@ resource "azurerm_key_vault_access_policy" "spn_policy" {
   object_id    = var.spn_object_id
 
   secret_permissions = ["Get", "List", "Set", "Delete"]
+
 }
 
 # ACR Identity Access Policy
