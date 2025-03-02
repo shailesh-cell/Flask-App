@@ -1,86 +1,4 @@
-name: Terraform Build and Validation
-
-on:
-  push:
-    branches:
-      - dev
-      - uat
-      - prod
-
-permissions:
-  id-token: write
-  contents: read
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set ENV Based on Branch
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; thenname: Validate and Plan Terraform
-
-on:
-  push:
-    branches:
-      - dev
-      - uat
-      - prod
-
-permissions:
-  id-token: write
-  contents: read
-
-jobs:
-  validate-and-plan:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set ENV Based on Branch
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-            echo "ENV=dev" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/uat" ]]; then
-            echo "ENV=uat" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/prod" ]]; then
-            echo "ENV=prod" >> $GITHUB_ENV
-          fi
-
-      - name: Log in to Azure with OIDC
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.ARM_CLIENT_ID }}
-          tenant-id: ${{ secrets.ARM_TENANT_ID }}
-          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-
-      - name: Set Up Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Run Terraform Format Check
-        run: terraform fmt -recursive -check || exit 1
-
-      - name: Auto-Fix Formatting Issues (If Any)
-        run: terraform fmt -recursive
-
-      - name: Validate All Terraform Modules
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          terraform validate || exit 1
-
-      - name: Terraform Init with OIDC Authentication
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}name: Validate and Plan Terraform
+name: Validate and Plan Terraform
 
 on:
   push:
@@ -134,8 +52,7 @@ jobs:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          terraform validate || exit 1
+        run: terraform validate || exit 1
 
       - name: Terraform Init with OIDC Authentication
         env:
