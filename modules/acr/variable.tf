@@ -1,27 +1,26 @@
-variable "app_name" {
-  description = "Application name (used for naming resources)"
-  type        = string
-}
-
-variable "environment" {
-  description = "Deployment environment (dev, test, prod)"
-  type        = string
-}
-
-variable "location" {
-  description = "Azure region where resources will be deployed"
+variable "acr_name" {
+  description = "The name of the Azure Container Registry."
   type        = string
 }
 
 variable "resource_group_name" {
-  description = "Name of the resource group"
+  description = "The name of the resource group."
   type        = string
 }
 
-variable "acr_name" {
-  description = "The name of the Azure Container Registry (if exists, use it)"
+variable "location" {
+  description = "The location where the ACR will be created."
   type        = string
-  default     = null  # Allow null to auto-generate
 }
 
+variable "sku" {
+  description = "The SKU of the ACR."
+  type        = string
+  default     = "Standard"
+}
 
+variable "admin_enabled" {
+  description = "Should the admin user be enabled?"
+  type        = bool
+  default     = false
+}
