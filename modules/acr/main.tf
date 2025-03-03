@@ -12,6 +12,12 @@ resource "azurerm_container_registry" "acr" {
   }
 }
 
+# Define the data resource to fetch ACR details
+data "azurerm_container_registry" "acr" {
+  name                = azurerm_container_registry.acr.name
+  resource_group_name = var.resource_group_name
+}
+
 resource "azurerm_key_vault_secret" "acr_username" {
   name         = "acr-username"
   value        = data.azurerm_container_registry.acr.admin_username

@@ -44,6 +44,6 @@ variable "spn_object_id" {
 }
 
 variable "acr_identity_principal_id" {
-  description = "Managed Identity Object ID of ACR to grant access to Key Vault"
+  description = "The principal ID of the ACR's managed identity"
   type        = string
 }
