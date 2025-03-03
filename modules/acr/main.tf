@@ -12,11 +12,6 @@ resource "azurerm_container_registry" "acr" {
   }
 }
 
-data "azurerm_container_registry" "acr" {
-  name                = azurerm_container_registry.acr.name
-  resource_group_name = var.resource_group_name
-}
-
 resource "azurerm_key_vault_secret" "acr_username" {
   name         = "acr-username"
   value        = data.azurerm_container_registry.acr.admin_username
@@ -29,4 +24,6 @@ resource "azurerm_key_vault_secret" "acr_password" {
   name         = "acr-password"
   value        = data.azurerm_container_registry.acr.admin_password
   key_vault_id = var.key_vault_id
+
+ depends_on = [azurerm_container_registry.acr]
 }

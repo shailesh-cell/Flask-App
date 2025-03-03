@@ -43,3 +43,7 @@ output "aci_fqdn" {
 output "key_vault_id" {
   value = module.key_vault.key_vault_id
 }
+
+output "acr_identity_principal_id" {
+  value = module.acr.acr_identity_principal_id
+}
