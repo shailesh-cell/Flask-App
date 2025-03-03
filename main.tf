@@ -7,6 +7,7 @@ module "resource_group" {
   location    = var.location
 }
 
+
 module "key_vault" {
   source                 = "./modules/key_vault"
   app_name               = var.app_name
@@ -45,6 +46,11 @@ module "acr" {
   key_vault_id        = module.key_vault.key_vault_id
 
   depends_on = [module.resource_group]
+}
+
+# Debug output to check the value of acr_identity_principal_id
+output "debug_acr_identity_principal_id" {
+  value = module.acr.acr_identity_principal_id
 }
 
 module "aci" {
