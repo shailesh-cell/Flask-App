@@ -8,10 +8,6 @@ resource "azurerm_key_vault" "kv" {
   tenant_id                = var.tenant_id
   purge_protection_enabled = true
   
-  identity {
-    type = "SystemAssigned"
-  }
-
   lifecycle {
     ignore_changes = [sku_name, tenant_id]
   }
