@@ -55,14 +55,6 @@ jobs:
           terraform fmt -recursive
           echo "✅ Formatting fixed!"
 
-      - name: Validate All Terraform Modules
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: terraform validate || exit 1
-
       - name: Terraform Init with OIDC Authentication
         env:
           ARM_USE_OIDC: true
@@ -76,6 +68,14 @@ jobs:
             exit 1
           fi
           terraform init -backend-config="$BACKEND_FILE"
+         
+      - name: Validate All Terraform Modules
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: terraform validate || exit 1
 
       - name: Terraform Plan
         run: |
