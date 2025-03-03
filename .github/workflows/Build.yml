@@ -44,7 +44,7 @@ jobs:
           echo "Checking Terraform formatting..."
           terraform fmt -recursive -check || {
             echo "❌ Formatting issues detected! Run 'terraform fmt -recursive' to fix.";
-            terraform fmt -recursive -diff; # Show what needs fixing
+            terraform fmt -recursive ; # Show what needs fixing
             exit 1;
           }
 
