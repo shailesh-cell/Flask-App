@@ -68,7 +68,7 @@ jobs:
             exit 1
           fi
           terraform init -backend-config="$BACKEND_FILE"
-         
+
       - name: Validate All Terraform Modules
         env:
           ARM_USE_OIDC: true
@@ -78,6 +78,11 @@ jobs:
         run: terraform validate || exit 1
 
       - name: Terraform Plan
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan
 
