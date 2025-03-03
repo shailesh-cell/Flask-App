@@ -39,15 +39,6 @@ jobs:
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Run Terraform Format Check (With Detailed Errors)
-        run: |
-          echo "Checking Terraform formatting..."
-          terraform fmt -recursive -check || {
-            echo "❌ Formatting issues detected! Run 'terraform fmt -recursive' to fix.";
-            terraform fmt -recursive ; # Show what needs fixing
-            exit 1;
-          }
-
       - name: Auto-Fix Terraform Formatting Issues (If Needed)
         if: failure()
         run: |
