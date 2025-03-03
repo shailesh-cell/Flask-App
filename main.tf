@@ -8,6 +8,22 @@ module "resource_group" {
 }
 
 
+module "acr" {
+  source              = "./modules/acr"
+  app_name            = var.app_name
+  environment         = var.environment
+  location            = module.resource_group.rg_location
+  resource_group_name = module.resource_group.rg_name
+  key_vault_id        = module.key_vault.key_vault_id
+
+  depends_on = [module.resource_group]
+}
+
+# Debug output to check the value of acr_identity_principal_id
+output "debug_acr_identity_principal_id" {
+  value = module.acr.acr_identity_principal_id
+}
+
 module "key_vault" {
   source                 = "./modules/key_vault"
   app_name               = var.app_name
@@ -37,21 +53,6 @@ resource "azurerm_key_vault_access_policy" "acr_access_policy" {
   depends_on = [module.acr]
 }
 
-module "acr" {
-  source              = "./modules/acr"
-  app_name            = var.app_name
-  environment         = var.environment
-  location            = module.resource_group.rg_location
-  resource_group_name = module.resource_group.rg_name
-  key_vault_id        = module.key_vault.key_vault_id
-
-  depends_on = [module.resource_group]
-}
-
-# Debug output to check the value of acr_identity_principal_id
-output "debug_acr_identity_principal_id" {
-  value = module.acr.acr_identity_principal_id
-}
 
 module "aci" {
   source              = "./modules/aci"
