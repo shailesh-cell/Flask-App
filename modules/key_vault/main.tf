@@ -7,6 +7,10 @@ resource "azurerm_key_vault" "kv" {
   sku_name                 = "standard"
   tenant_id                = var.tenant_id
   purge_protection_enabled = true
+  
+  identity {
+    type = "SystemAssigned"
+  }
 
   lifecycle {
     ignore_changes = [sku_name, tenant_id]
@@ -27,7 +31,7 @@ resource "azurerm_key_vault_access_policy" "spn_policy" {
 resource "azurerm_key_vault_access_policy" "acr_policy" {
   key_vault_id = azurerm_key_vault.kv.id
   tenant_id    = var.tenant_id
-  object_id    = var.acr_identity_object_id # Passed from ACR module
+  object_id    = var.acr_identity_principal_id # Passed from ACR module
 
   secret_permissions = ["Get", "List", "Set", "Delete"]
 }

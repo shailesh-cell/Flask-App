@@ -20,6 +20,6 @@ output "admin_password" {
 }
 
 output "acr_identity_principal_id" {
-  value = azurerm_container_registry.acr.identity[0].principal_id
+  value = azurerm_container_registry.acr.identity.principal_id
 }
 
