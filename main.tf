@@ -1,3 +1,5 @@
+# root main.tf
+
 module "resource_group" {
   source      = "./modules/resource_group"
   app_name    = var.app_name
