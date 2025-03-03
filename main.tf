@@ -14,7 +14,7 @@ module "key_vault" {
   resource_group_name    = module.resource_group.rg_name
   acr_password           = var.acr_password
   acr_username           = var.acr_username
-  acr_identity_principal_id = module.acr.acr_identity[0]_principal_id
+  acr_identity_principal_id = module.acr.acr_identity_principal_id
   application_object_id  = var.spn_object_id
   spn_object_id          = var.spn_object_id
   depends_on             = [module.resource_group]
@@ -24,7 +24,7 @@ module "key_vault" {
 resource "azurerm_key_vault_access_policy" "acr_access_policy" {
   key_vault_id = module.key_vault.key_vault_id
   tenant_id    = var.tenant_id
-  object_id    = module.acr.acr_identity[0]_principal_id
+  object_id    = module.acr.acr_identity_principal_id
 
   secret_permissions = [
     "Get",
