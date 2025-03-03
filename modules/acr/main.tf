@@ -1,4 +1,4 @@
-# Create ACR Container Group with Managed Identity
+# Create ACR Container Group with Managed Identity #
 
 resource "azurerm_container_registry" "acr" {
   name                = "${var.app_name}acr${var.environment}"
