@@ -39,6 +39,9 @@ module "key_vault" {
   acr_identity_principal_id  = module.acr.acr_identity_principal_id
   application_object_id      = var.spn_object_id
   spn_object_id              = var.spn_object_id
+  # ✅ Pass ACR username and password
+  acr_username               = module.acr.acr_username
+  acr_password               = module.acr.acr_password
 
   depends_on = [module.resource_group, module.acr]
 }
