@@ -27,9 +27,10 @@ resource "azurerm_key_vault_access_policy" "spn_policy" {
 resource "azurerm_key_vault_access_policy" "acr_policy" {
   key_vault_id = azurerm_key_vault.kv.id
   tenant_id    = var.tenant_id
-  object_id    = var.acr_identity_principal_id # Passed from ACR module
+  object_id    = module.acr.identity[0].principal_id # Passed from ACR module
 
   secret_permissions = ["Get", "List", "Set", "Delete"]
+  depends_on = [azurerm_container_registry.acr]
 }
 
 # Store ACR Username in Key Vault
