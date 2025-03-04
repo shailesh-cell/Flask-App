@@ -2,7 +2,7 @@ name: Release to ACI
 
 on:
   workflow_run:
-    workflows: ["Validate and Plan Terraform"]
+    workflows: 
     types:
       - completed
     branches:
