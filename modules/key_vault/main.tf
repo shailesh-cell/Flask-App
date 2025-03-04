@@ -30,8 +30,6 @@ resource "azurerm_key_vault_access_policy" "acr_policy" {
   object_id    = var.acr_identity_principal_id # Passed from ACR module
 
   secret_permissions = ["Get", "List", "Set", "Delete"]
-
-  depends_on = [module.acr] # Ensures ACR is created first
 }
 
 # Store ACR Username in Key Vault
