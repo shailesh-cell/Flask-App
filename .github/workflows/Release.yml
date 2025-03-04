@@ -2,15 +2,30 @@ name: Release to ACI
 
 on:
   workflow_run:
-    workflows: ["Deploy to ACI"]
+    workflows: ["Validate and Plan Terraform"]
     types:
       - completed
+    branches:
+      - dev
+      - uat
+      - prod
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' # Run only if build.yml was successful
 
     steps:
+      - name: Extract Environment Based on Branch
+        run: |
+          if [[ "${{ github.event.workflow_run.head_branch }}" == "dev" ]]; then
+            echo "ENV=dev" >> $GITHUB_ENV
+          elif [[ "${{ github.event.workflow_run.head_branch }}" == "uat" ]]; then
+            echo "ENV=uat" >> $GITHUB_ENV
+          elif [[ "${{ github.event.workflow_run.head_branch }}" == "prod" ]]; then
+            echo "ENV=prod" >> $GITHUB_ENV
+          fi
+
       - name: Download Terraform Plan Artifact
         uses: actions/download-artifact@v4
         with:
@@ -33,11 +48,12 @@ jobs:
 
       - name: Terraform Init
         run: |
-          if [ ! -f envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend ]; then
+          BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+          if [ ! -f "$BACKEND_FILE" ]; then
             echo "Backend file not found!"
             exit 1
           fi
-          terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
+          terraform init -backend-config="$BACKEND_FILE"
 
       - name: Deploy to Azure Container Instance
         run: |
