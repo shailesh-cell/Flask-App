@@ -9,7 +9,7 @@ module "resource_group" {
 }
 
 # ------------------------------------
-# Azure Container Registry (ACR) Module
+# Azure Container Registry (ACR) Module - Step 1
 # ------------------------------------
 module "acr" {
   source              = "./modules/acr"
@@ -17,18 +17,17 @@ module "acr" {
   environment         = var.environment
   location            = module.resource_group.rg_location
   resource_group_name = module.resource_group.rg_name
-  key_vault_id = module.key_vault.key_vault_id
 
   depends_on = [module.resource_group]
 }
 
-# Debug output to check the value of acr_identity_principal_id
+# Debug output to check ACR identity principal ID
 output "debug_acr_identity_principal_id" {
   value = module.acr.acr_identity_principal_id
 }
 
 # ------------------------------------
-# Azure Key Vault Module
+# Azure Key Vault Module - Step 2 (After ACR)
 # ------------------------------------
 module "key_vault" {
   source                     = "./modules/key_vault"
@@ -37,9 +36,7 @@ module "key_vault" {
   location                   = module.resource_group.rg_location
   tenant_id                  = var.tenant_id
   resource_group_name        = module.resource_group.rg_name
-  acr_password               = var.acr_password
-  acr_username               = var.acr_username
-  acr_identity_principal_id  = module.acr.acr_identity_principal_id
+  acr_identity_principal_id  = module.acr.acr_identity_principal_id # No cycle now
   application_object_id      = var.spn_object_id
   spn_object_id              = var.spn_object_id
 
@@ -47,7 +44,19 @@ module "key_vault" {
 }
 
 # ------------------------------------
-# Azure Container Instances (ACI) Module
+# ACR Secrets Module - Step 3 (After ACR & Key Vault)
+# ------------------------------------
+module "acr_secrets" {
+  source        = "./modules/acr_secrets"
+  key_vault_id  = module.key_vault.key_vault_id
+  acr_username  = var.acr_username
+  acr_password  = var.acr_password
+
+  depends_on = [module.acr, module.key_vault]
+}
+
+# ------------------------------------
+# Azure Container Instances (ACI) Module - Step 4 (Final Deployment)
 # ------------------------------------
 module "aci" {
   source              = "./modules/aci"
@@ -60,5 +69,5 @@ module "aci" {
   image_tag           = var.image_tag
   container_port      = var.container_port
 
-  depends_on = [module.acr, module.key_vault]
+  depends_on = [module.acr, module.key_vault, module.acr_secrets]
 }
