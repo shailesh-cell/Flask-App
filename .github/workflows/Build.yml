@@ -39,6 +39,9 @@ jobs:
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Print Terraform Version
+        run: terraform version
+
       - name: Auto-Fix Terraform Formatting Issues (If Needed)
         if: failure()
         run: |
@@ -60,22 +63,33 @@ jobs:
           fi
           terraform init -backend-config="$BACKEND_FILE"
 
+      - name: Debug Terraform Variables
+        run: |
+          echo "🔍 Debugging Terraform Variables..."
+          terraform output || true
+          echo "✅ Finished Debugging Variables"
+
       - name: Validate All Terraform Modules
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: terraform validate || exit 1
+        run: |
+          echo "🔍 Running Terraform Validate..."
+          terraform validate || (echo "❌ Validation Failed" && exit 1)
+          echo "✅ Validation Completed"
 
-      - name: Terraform Plan
+      - name: Terraform Plan with Debugging
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan
+          echo "🔍 Running Terraform Plan..."
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan -no-color || (echo "❌ Plan Failed" && exit 1)
+          echo "✅ Plan Completed Successfully"
 
       - name: Store Terraform Plan Artifact
         uses: actions/upload-artifact@v4
