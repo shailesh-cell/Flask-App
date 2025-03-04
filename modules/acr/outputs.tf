@@ -1,24 +1,25 @@
 output "acr_id" {
-  description = "The ID of the Azure Container Registry"
-  value       = local.acr_id
+  value = azurerm_container_registry.acr.id
 }
 
 output "acr_name" {
-  description = "The name of the Azure Container Registry"
-  value       = local.acr_name
+  value = azurerm_container_registry.acr.name
 }
 
-output "acr_login_server" {
-  description = "The login server of the Azure Container Registry"
-  value       = "${local.acr_name}.azurecr.io"
+output "login_server" {
+  value = azurerm_container_registry.acr.login_server
 }
 
-output "acr_username_secret" {
-  description = "The Key Vault secret name for the ACR username"
-  value       = azurerm_key_vault_secret.acr_username.name
+output "acr_identity_principal_id" {
+  value = azurerm_container_registry.acr.identity[0].principal_id
 }
 
-output "acr_password_secret" {
-  description = "The Key Vault secret name for the ACR password"
-  value       = azurerm_key_vault_secret.acr_password.name
+# Output admin credentials for use in acr_secrets module
+output "acr_username" {
+  value = azurerm_container_registry.acr.admin_username
 }
+
+output "acr_password" {
+  value = azurerm_container_registry.acr.admin_password
+}
+

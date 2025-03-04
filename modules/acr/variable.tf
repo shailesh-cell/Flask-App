@@ -1,24 +1,31 @@
 variable "app_name" {
-  description = "Application name (used for naming resources)"
+  description = "The name of the application."
   type        = string
 }
 
 variable "environment" {
-  description = "Deployment environment (dev, test, prod)"
-  type        = string
-}
-
-variable "location" {
-  description = "Azure region where resources will be deployed"
+  description = "The environment (e.g., dev, staging, prod)."
   type        = string
 }
 
 variable "resource_group_name" {
-  description = "Name of the resource group"
+  description = "The name of the resource group."
   type        = string
 }
 
-variable "key_vault_id" {
-  description = "The ID of the Azure Key Vault where secrets will be stored"
+variable "location" {
+  description = "The location where the ACR will be created."
   type        = string
+}
+
+variable "sku" {
+  description = "The SKU of the ACR."
+  type        = string
+  default     = "Standard"
+}
+
+variable "admin_enabled" {
+  description = "Should the admin user be enabled?"
+  type        = bool
+  default     = false
 }

@@ -1,12 +1,17 @@
 output "key_vault_id" {
-  description = "The ID of the Azure Key Vault"
-  value       = local.key_vault_id
+  value = azurerm_key_vault.kv.id
 }
 
-output "key_vault_name" {
-  description = "The name of the Azure Key Vault"
-  value       = coalesce(
-    data.azurerm_key_vault.existing.name,
-    try(azurerm_key_vault.kv[0].name, null)
-  )
+output "id" {
+  description = "The ID of the Key Vault"
+  value       = azurerm_key_vault.kv.id
+}
+
+output "name" {
+  description = "The name of the Key Vault"
+  value       = azurerm_key_vault.kv.name
+}
+
+output "acr_identity_principal_id" {
+  value = var.acr_identity_principal_id
 }
