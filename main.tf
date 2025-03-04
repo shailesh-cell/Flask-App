@@ -47,7 +47,7 @@ module "key_vault" {
 # ACR Secrets Module - Step 3 (After ACR & Key Vault)
 # ------------------------------------
 module "acr" {
-  source        = "./modules/acr_secrets"
+  source        = "./modules/acr"
   key_vault_id  = module.key_vault.key_vault_id
   acr_username  = var.acr_username
   acr_password  = var.acr_password
