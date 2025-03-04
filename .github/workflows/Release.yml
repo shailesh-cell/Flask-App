@@ -2,7 +2,7 @@ name: Deploy to ACI
 
 on:
   workflow_run:
-    workflows: ["Build and Push to ACR"]
+    workflows: ["Validate and Plan Terraform"]
     types:
       - completed
 
@@ -12,12 +12,12 @@ jobs:
 
     steps:
       - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: terraform-plan
 
       - name: Download Docker Image Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: docker-image
 
