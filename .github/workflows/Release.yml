@@ -2,28 +2,37 @@ name: Release to ACI
 
 on:
   workflow_run:
-    workflows: 
+    workflows: ["Validate and Plan Terraform"]  # 🔹 Ensure this matches your build workflow!
     types:
       - completed
-    branches:
-      - dev
-      - uat
-      - prod
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success' # Run only if build.yml was successful
+    if: github.event.workflow_run.conclusion == 'success'
 
     steps:
+      - name: Get Branch Name from Workflow Run
+        id: get_branch
+        run: |
+          BRANCH=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }} \
+            | jq -r '.head_branch')
+
+          echo "Branch detected: $BRANCH"
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+
       - name: Extract Environment Based on Branch
         run: |
-          if [[ "${{ github.event.workflow_run.head_branch }}" == "dev" ]]; then
+          if [[ "${{ env.BRANCH }}" == "dev" ]]; then
             echo "ENV=dev" >> $GITHUB_ENV
-          elif [[ "${{ github.event.workflow_run.head_branch }}" == "uat" ]]; then
+          elif [[ "${{ env.BRANCH }}" == "uat" ]]; then
             echo "ENV=uat" >> $GITHUB_ENV
-          elif [[ "${{ github.event.workflow_run.head_branch }}" == "prod" ]]; then
+          elif [[ "${{ env.BRANCH }}" == "prod" ]]; then
             echo "ENV=prod" >> $GITHUB_ENV
+          else
+            echo "Unknown branch: ${{ env.BRANCH }}"
+            exit 1
           fi
 
       - name: Download Terraform Plan Artifact
