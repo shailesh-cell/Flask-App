@@ -1,27 +1,32 @@
-name: Destroy ACI Resources
+name: Destroy Infrastructure
 
 on:
-  workflow_dispatch: # This allows manual triggering of the workflow
+  workflow_dispatch: # Manual trigger
 
 jobs:
   destroy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-plan
-
-      - name: Download Docker Image Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-
-      - name: Set ENV Based on Input
+      - name: Check Last Build Status
         run: |
-          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
-            echo "ENV=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_ENV
+          echo "Checking last build status..."
+          LAST_BUILD_STATUS=$(gh run list --workflow "Validate and Plan Terraform" --branch "${{ github.ref_name }}" --json conclusion --jq '.[0].conclusion')
+          if [[ "$LAST_BUILD_STATUS" != "success" ]]; then
+            echo "❌ Last build was not successful. Destroy aborted!"
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set ENV Based on Branch
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
+            echo "ENV=dev" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/uat" ]]; then
+            echo "ENV=uat" >> $GITHUB_ENV
+          elif [[ "${{ github.ref }}" == "refs/heads/prod" ]]; then
+            echo "ENV=prod" >> $GITHUB_ENV
           fi
 
       - name: Log in to Azure with OIDC
@@ -36,12 +41,23 @@ jobs:
 
       - name: Terraform Init
         run: |
-          if [ ! -f envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend ]; then
+          BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+          if [ ! -f "$BACKEND_FILE" ]; then
             echo "Backend file not found!"
             exit 1
           fi
-          terraform init -backend-config=envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend
+          terraform init -backend-config="$BACKEND_FILE"
 
-      - name: Destroy ACI Resources
+      - name: Confirm Before Destroy
+        run: |
+          echo "⚠️ Are you sure you want to destroy the infrastructure in ${{ env.ENV }}?"
+          echo "To continue, set 'DESTROY_CONFIRM=true' in GitHub Actions Secrets."
+          if [[ "${{ secrets.DESTROY_CONFIRM }}" != "true" ]]; then
+            echo "❌ Destroy confirmation not provided. Aborting!"
+            exit 1
+          fi
+          echo "✅ Confirmation received. Proceeding with destroy."
+
+      - name: Terraform Destroy
         run: |
           terraform destroy -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -auto-approve
