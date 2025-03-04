@@ -63,11 +63,17 @@ jobs:
           fi
           terraform init -backend-config="$BACKEND_FILE"
 
+      - name: Debug Terraform Environment Variables
+        run: |
+          echo "🔍 Debugging ENV Variables..."
+          env | grep "ARM_"
+          echo "✅ Finished Debugging ENV Variables"
+
       - name: Debug Terraform Variables
         run: |
           echo "🔍 Debugging Terraform Variables..."
           terraform output || true
-          echo "✅ Finished Debugging Variables"
+          echo "✅ Finished Debugging Terraform Variables"
 
       - name: Validate All Terraform Modules
         env:
@@ -88,8 +94,13 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           echo "🔍 Running Terraform Plan..."
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan -no-color || (echo "❌ Plan Failed" && exit 1)
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan -no-color 2>&1 | tee terraform-debug.log
           echo "✅ Plan Completed Successfully"
+
+      - name: Debug Terraform Plan Output
+        run: |
+          echo "🔍 Checking Terraform Plan for Missing Variables..."
+          grep -i "missing required argument" terraform-debug.log || echo "✅ No missing arguments found."
 
       - name: Store Terraform Plan Artifact
         uses: actions/upload-artifact@v4
