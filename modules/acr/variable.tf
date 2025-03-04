@@ -29,3 +29,8 @@ variable "admin_enabled" {
   type        = bool
   default     = false
 }
+
+variable "key_vault_id" {
+  description = "The ID of the Azure Key Vault where ACR credentials will be stored"
+  type        = string
+}
