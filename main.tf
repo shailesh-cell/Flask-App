@@ -36,7 +36,7 @@ module "key_vault" {
   acr_identity_principal_id             = module.acr.acr_identity_principal_id
   application_object_id  = var.spn_object_id
   spn_object_id          = var.spn_object_id
-  depends_on             = [module.resource_group]
+  depends_on             = [module.resource_group,module.acr]
 }
 
 # Ensure Key Vault depends on ACR
