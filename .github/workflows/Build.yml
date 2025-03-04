@@ -72,8 +72,8 @@ jobs:
       - name: Debug Terraform Variables
         run: |
           echo "🔍 Debugging Terraform Variables..."
-          terraform output || true
-          echo "✅ Finished Debugging Terraform Variables"
+          terraform output acr_identity_principal_id || echo "❌ Value not available!"
+          echo "✅ Finished Debugging Variables"
 
       - name: Validate All Terraform Modules
         env:
