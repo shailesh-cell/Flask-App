@@ -27,7 +27,7 @@ output "debug_acr_identity_principal_id" {
 }
 
 # ------------------------------------
-# Azure Key Vault Module (Store ACR Credentials Here)
+# Azure Key Vault Module (Only Creates Key Vault)
 # ------------------------------------
 module "key_vault" {
   source                     = "./modules/key_vault"
@@ -39,28 +39,18 @@ module "key_vault" {
   acr_identity_principal_id  = module.acr.acr_identity_principal_id
   application_object_id      = var.spn_object_id
   spn_object_id              = var.spn_object_id
-  # ✅ Pass ACR username and password
-  acr_username               = module.acr.acr_username
-  acr_password               = module.acr.acr_password
 
   depends_on = [module.resource_group, module.acr]
 }
 
 # ------------------------------------
-# Store ACR Secrets in Key Vault
+# ACR Secrets Module (Stores Secrets in Key Vault)
 # ------------------------------------
-resource "azurerm_key_vault_secret" "acr_username" {
-  name         = "acr-username"
-  value        = module.acr.acr_username
+module "acr_secrets" {
+  source       = "./modules/acr_secrets"
   key_vault_id = module.key_vault.key_vault_id
-
-  depends_on = [module.key_vault]
-}
-
-resource "azurerm_key_vault_secret" "acr_password" {
-  name         = "acr-password"
-  value        = module.acr.acr_password
-  key_vault_id = module.key_vault.key_vault_id
+  acr_username = module.acr.acr_username
+  acr_password = module.acr.acr_password
 
   depends_on = [module.key_vault]
 }
@@ -79,5 +69,5 @@ module "aci" {
   image_tag           = var.image_tag
   container_port      = var.container_port
 
-  depends_on = [module.acr, module.key_vault]
+  depends_on = [module.acr, module.acr_secrets]
 }
