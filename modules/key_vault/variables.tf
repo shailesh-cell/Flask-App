@@ -43,6 +43,7 @@ variable "spn_object_id" {
   type        = string
 }
 
-output "acr_identity_principal_id" {
-  value = var.acr_identity_principal_id
+variable "acr_identity_principal_id" {
+  description = "The principal ID of the ACR identity"
+  type        = string
 }

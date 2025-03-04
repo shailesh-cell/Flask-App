@@ -11,3 +11,7 @@ output "name" {
   description = "The name of the Key Vault"
   value       = azurerm_key_vault.kv.name
 }
+
+output "acr_identity_principal_id" {
+  value = var.acr_identity_principal_id
+}
