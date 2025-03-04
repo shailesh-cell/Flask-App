@@ -42,7 +42,6 @@ module "key_vault" {
   # ❌ These are missing before this module is called
   acr_username               = module.acr.acr_username
   acr_password               = module.acr.acr_password
-  acr_identity_principal_id  = module.acr.acr_identity_principal_id
 
 
   depends_on = [module.resource_group, module.acr]
