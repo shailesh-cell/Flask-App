@@ -24,10 +24,10 @@ resource "azurerm_key_vault_access_policy" "spn_policy" {
 }
 
 # ACR Identity Access Policy
-resource "azurerm_key_vault_access_policy" "acr_policy" {
-  key_vault_id = azurerm_key_vault.kv.id
-  tenant_id    = var.tenant_id
-  object_id    = var.acr_identity_principal_id # Passed from ACR module
+#resource "azurerm_key_vault_access_policy" "acr_policy" {
+#  key_vault_id = azurerm_key_vault.kv.id
+#  tenant_id    = var.tenant_id
+#  object_id    = var.acr_identity_principal_id # Passed from ACR module
 
   secret_permissions = ["Get", "List", "Set", "Delete"]
 }
