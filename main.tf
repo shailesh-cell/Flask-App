@@ -9,7 +9,7 @@ module "resource_group" {
 }
 
 # ------------------------------------
-# Azure Container Registry (ACR) Module - Step 1
+# Azure Container Registry (ACR) Module
 # ------------------------------------
 module "acr" {
   source              = "./modules/acr"
@@ -27,7 +27,7 @@ output "debug_acr_identity_principal_id" {
 }
 
 # ------------------------------------
-# Azure Key Vault Module - Step 2 (After ACR)
+# Azure Key Vault Module (Store ACR Credentials Here)
 # ------------------------------------
 module "key_vault" {
   source                     = "./modules/key_vault"
@@ -36,7 +36,7 @@ module "key_vault" {
   location                   = module.resource_group.rg_location
   tenant_id                  = var.tenant_id
   resource_group_name        = module.resource_group.rg_name
-  acr_identity_principal_id  = module.acr.acr_identity_principal_id # No cycle now
+  acr_identity_principal_id  = module.acr.acr_identity_principal_id
   application_object_id      = var.spn_object_id
   spn_object_id              = var.spn_object_id
 
@@ -44,19 +44,26 @@ module "key_vault" {
 }
 
 # ------------------------------------
-# ACR Secrets Module - Step 3 (After ACR & Key Vault)
+# Store ACR Secrets in Key Vault
 # ------------------------------------
-module "acr" {
-  source        = "./modules/acr"
-  key_vault_id  = module.key_vault.key_vault_id
-  acr_username  = var.acr_username
-  acr_password  = var.acr_password
+resource "azurerm_key_vault_secret" "acr_username" {
+  name         = "acr-username"
+  value        = module.acr.acr_username
+  key_vault_id = module.key_vault.key_vault_id
+
+  depends_on = [module.key_vault]
+}
+
+resource "azurerm_key_vault_secret" "acr_password" {
+  name         = "acr-password"
+  value        = module.acr.acr_password
+  key_vault_id = module.key_vault.key_vault_id
 
   depends_on = [module.key_vault]
 }
 
 # ------------------------------------
-# Azure Container Instances (ACI) Module - Step 4 (Final Deployment)
+# Azure Container Instances (ACI) Module
 # ------------------------------------
 module "aci" {
   source              = "./modules/aci"
@@ -69,5 +76,5 @@ module "aci" {
   image_tag           = var.image_tag
   container_port      = var.container_port
 
-  depends_on = [module.acr, module.key_vault, module.acr_secrets]
+  depends_on = [module.acr, module.key_vault]
 }
