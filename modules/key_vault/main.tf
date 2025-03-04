@@ -23,6 +23,14 @@ resource "azurerm_key_vault_access_policy" "spn_policy" {
 
 }
 
+data "terraform_remote_state" "acr" {
+  backend = "remote" // or use another backend type, like "local"
+  config = { "tfstate"
+    // backend configuration, such as bucket name, key, and region for S3, or other config parameters for your remote backend
+  }
+}
+
+
 # ACR Identity Access Policy
 resource "azurerm_key_vault_access_policy" "acr_policy" {
   key_vault_id = azurerm_key_vault.kv.id
