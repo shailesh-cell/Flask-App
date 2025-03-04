@@ -30,7 +30,6 @@ resource "azurerm_key_vault_access_policy" "acr_policy" {
   object_id    = module.acr[0].identity[0].principal_id # Passed from ACR module
 
   secret_permissions = ["Get", "List", "Set", "Delete"]
-  depends_on = [azurerm_container_registry.acr]
 }
 
 # Store ACR Username in Key Vault
