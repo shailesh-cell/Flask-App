@@ -1,13 +1,13 @@
-name: Deploy to ACI
+name: Release to ACI
 
 on:
   workflow_run:
-    workflows: ["Validate and Plan Terraform"]
+    workflows: ["Deploy to ACI"]
     types:
       - completed
 
 jobs:
-  deploy:
+  release:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,12 +20,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker-image
-
-      - name: Set ENV Based on Input
-        run: |
-          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
-            echo "ENV=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_ENV
-          fi
 
       - name: Log in to Azure with OIDC
         uses: azure/login@v2
