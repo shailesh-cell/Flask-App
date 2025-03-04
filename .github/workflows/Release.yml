@@ -1,49 +1,33 @@
-name: Release to ACI
+name: Deploy Terraform
 
 on:
   workflow_run:
-    workflows: ["Validate and Plan Terraform"]  # 🔹 Ensure this matches your build workflow!
+    workflows: ["Validate and Plan Terraform"]  # This matches the build.yml workflow name
     types:
       - completed
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  release:
+  deploy:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # Ensure it runs only if build.yml succeeds
 
     steps:
-      - name: Get Branch Name from Workflow Run
-        id: get_branch
-        run: |
-          BRANCH=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }} \
-            | jq -r '.head_branch')
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-          echo "Branch detected: $BRANCH"
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-
-      - name: Extract Environment Based on Branch
+      - name: Set ENV Based on Branch
         run: |
-          if [[ "${{ env.BRANCH }}" == "dev" ]]; then
+          if [[ "${{ github.event.workflow_run.head_branch }}" == "dev" ]]; then
             echo "ENV=dev" >> $GITHUB_ENV
-          elif [[ "${{ env.BRANCH }}" == "uat" ]]; then
+          elif [[ "${{ github.event.workflow_run.head_branch }}" == "uat" ]]; then
             echo "ENV=uat" >> $GITHUB_ENV
-          elif [[ "${{ env.BRANCH }}" == "prod" ]]; then
+          elif [[ "${{ github.event.workflow_run.head_branch }}" == "prod" ]]; then
             echo "ENV=prod" >> $GITHUB_ENV
-          else
-            echo "Unknown branch: ${{ env.BRANCH }}"
-            exit 1
           fi
-
-      - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-plan
-
-      - name: Download Docker Image Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
 
       - name: Log in to Azure with OIDC
         uses: azure/login@v2
@@ -55,15 +39,35 @@ jobs:
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform Init
+      - name: Print Terraform Version
+        run: terraform version
+
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+
+      - name: Terraform Init with OIDC Authentication
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
           if [ ! -f "$BACKEND_FILE" ]; then
-            echo "Backend file not found!"
+            echo "Backend config file not found: $BACKEND_FILE"
             exit 1
           fi
           terraform init -backend-config="$BACKEND_FILE"
 
-      - name: Deploy to Azure Container Instance
+      - name: Apply Terraform Plan
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform apply -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -auto-approve
+          echo "Applying Terraform Plan..."
+          terraform apply -auto-approve tfplan
+          echo "✅ Terraform Apply Completed Successfully"
