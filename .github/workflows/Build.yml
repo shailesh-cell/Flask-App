@@ -51,6 +51,28 @@ jobs:
         run: |
           terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan
           ls -lh tfplan  # Verify the file exists
+          
+      - name: Debug Terraform State
+        run: |
+          echo "Listing Terraform resources..."
+          terraform state list || echo "Terraform state not initialized or empty"
+
+      - name: Debug Terraform Backend Access
+        run: |
+          echo "Checking Terraform backend storage account..."
+          echo "Backend File: envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+          cat envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend || echo "Backend config file missing"
+
+      - name: Debug ACR Access
+        run: |
+          echo "Checking ACR details..."
+          az acr show --name flaskappacrdev --query "{Name:name,ResourceGroup:resourceGroup,AdminEnabled:adminUserEnabled}" || echo "Failed to fetch ACR details"
+
+      - name: Debug Key Vault Access
+        run: |
+          echo "Checking Key Vault access policies..."
+          az keyvault show --name flaskapp-dev-kv --query "properties.accessPolicies" || echo "Failed to fetch Key Vault details"
+
 
       - name: Store Terraform Plan Artifact
         uses: actions/upload-artifact@v4
