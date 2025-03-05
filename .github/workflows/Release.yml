@@ -2,7 +2,7 @@ name: Deploy Terraform
 
 on:
   workflow_run:
-    workflows: ["Validate and Plan Terraform"]  # This matches the build.yml workflow name
+    workflows: ["Validate and Plan Terraform"]
     types:
       - completed
 
@@ -13,7 +13,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # Ensure it runs only if build.yml succeeds
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout Code
@@ -21,13 +21,8 @@ jobs:
 
       - name: Set ENV Based on Branch
         run: |
-          if [[ "${{ github.event.workflow_run.head_branch }}" == "dev" ]]; then
-            echo "ENV=dev" >> $GITHUB_ENV
-          elif [[ "${{ github.event.workflow_run.head_branch }}" == "uat" ]]; then
-            echo "ENV=uat" >> $GITHUB_ENV
-          elif [[ "${{ github.event.workflow_run.head_branch }}" == "prod" ]]; then
-            echo "ENV=prod" >> $GITHUB_ENV
-          fi
+          BRANCH=$(echo "${{ github.event.workflow_run.head_commit.ref }}" | sed 's|refs/heads/||')
+          echo "ENV=$BRANCH" >> $GITHUB_ENV
 
       - name: Log in to Azure with OIDC
         uses: azure/login@v2
@@ -39,35 +34,26 @@ jobs:
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Print Terraform Version
-        run: terraform version
-
       - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-plan
-
-      - name: Terraform Init with OIDC Authentication
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
-          if [ ! -f "$BACKEND_FILE" ]; then
-            echo "Backend config file not found: $BACKEND_FILE"
+          RUN_ID=${{ github.event.workflow_run.id }}
+          ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts"
+          ARTIFACT_ID=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" $ARTIFACT_URL | jq -r '.artifacts[] | select(.name | startswith("terraform-plan-")) | .id')
+          if [ -z "$ARTIFACT_ID" ]; then
+            echo "❌ No Terraform plan artifact found!"
             exit 1
           fi
+          curl -s -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -o artifact.zip "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip"
+          unzip artifact.zip
+          ls -lh tfplan
+
+      - name: Terraform Init
+        env:
+          ARM_USE_OIDC: true
+        run: |
+          BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
           terraform init -backend-config="$BACKEND_FILE"
 
       - name: Apply Terraform Plan
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          echo "Applying Terraform Plan..."
           terraform apply -auto-approve tfplan
-          echo "✅ Terraform Apply Completed Successfully"

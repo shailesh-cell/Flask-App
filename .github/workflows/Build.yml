@@ -21,13 +21,8 @@ jobs:
 
       - name: Set ENV Based on Branch
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-            echo "ENV=dev" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/uat" ]]; then
-            echo "ENV=uat" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/prod" ]]; then
-            echo "ENV=prod" >> $GITHUB_ENV
-          fi
+          BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
+          echo "ENV=$BRANCH" >> $GITHUB_ENV
 
       - name: Log in to Azure with OIDC
         uses: azure/login@v2
@@ -39,71 +34,24 @@ jobs:
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Print Terraform Version
-        run: terraform version
-
-      - name: Auto-Fix Terraform Formatting Issues (If Needed)
-        if: failure()
-        run: |
-          echo "🔧 Auto-fixing Terraform formatting issues..."
-          terraform fmt -recursive
-          echo "✅ Formatting fixed!"
-
-      - name: Terraform Init with OIDC Authentication
+      - name: Terraform Init
         env:
           ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
-          if [ ! -f "$BACKEND_FILE" ]; then
-            echo "Backend config file not found: $BACKEND_FILE"
-            exit 1
-          fi
           terraform init -backend-config="$BACKEND_FILE"
 
-      - name: Debug Terraform Environment Variables
-        run: |
-          echo "🔍 Debugging ENV Variables..."
-          env | grep "ARM_" || echo "No ARM_ variables found."
-          echo "✅ Finished Debugging ENV Variables"
+      - name: Terraform Validate
+        run: terraform validate
 
-      - name: Debug Terraform Variables
+      - name: Terraform Plan
         run: |
-          echo "🔍 Debugging Terraform Variables..."
-          terraform output acr_identity_principal_id || echo "❌ Value not available!"
-          echo "✅ Finished Debugging Variables"
-
-      - name: Validate All Terraform Modules
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          echo "🔍 Running Terraform Validate..."
-          terraform validate || (echo "❌ Validation Failed" && exit 1)
-          echo "✅ Validation Completed"
-
-      - name: Terraform Plan with Debugging
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          echo "🔍 Running Terraform Plan..."
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan -no-color 2>&1 | tee terraform-debug.log
-          echo "✅ Plan Completed Successfully"
-
-      - name: Debug Terraform Plan Output
-        run: |
-          echo "🔍 Checking Terraform Plan for Missing Variables..."
-          grep -i "missing required argument" terraform-debug.log || echo "✅ No missing arguments found."
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan
+          ls -lh tfplan  # Verify the file exists
 
       - name: Store Terraform Plan Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-plan
+          name: terraform-plan-${{ github.run_id }}
           path: tfplan
+          retention-days: 1  # Retain for 1 day to prevent clutter
