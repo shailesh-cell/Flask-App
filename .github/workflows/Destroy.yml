@@ -8,26 +8,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check Last Build Status
+      # ✅ Replace this with a GitHub API-based artifact download
+      - name: Download Terraform Plan Artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Checking last build status..."
-          LAST_BUILD_STATUS=$(gh run list --workflow "Validate and Plan Terraform" --branch "${{ github.ref_name }}" --json conclusion --jq '.[0].conclusion')
-          if [[ "$LAST_BUILD_STATUS" != "success" ]]; then
-            echo "❌ Last build was not successful. Destroy aborted!"
+          RUN_ID=${{ github.event.workflow_run.id }}
+          ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts"
+          
+          echo "Fetching artifacts from: $ARTIFACT_URL"
+          
+          # Get artifact download URL
+          DOWNLOAD_URL=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ARTIFACT_URL" | jq -r '.artifacts[] | select(.name=="terraform-plan") | .archive_download_url')
+
+          if [[ -z "$DOWNLOAD_URL" || "$DOWNLOAD_URL" == "null" ]]; then
+            echo "❌ Terraform Plan artifact not found!"
             exit 1
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+          # Download the artifact
+          curl -s -L -H "Authorization: token $GH_TOKEN" -o terraform-plan.zip "$DOWNLOAD_URL"
+          unzip terraform-plan.zip -d .
+          rm terraform-plan.zip
+          
       - name: Set ENV Based on Branch
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/dev" ]]; then
-            echo "ENV=dev" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/uat" ]]; then
-            echo "ENV=uat" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/prod" ]]; then
-            echo "ENV=prod" >> $GITHUB_ENV
-          fi
+          BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
+          echo "ENV=$BRANCH" >> $GITHUB_ENV
 
       - name: Log in to Azure with OIDC
         uses: azure/login@v2
