@@ -38,7 +38,7 @@ module "key_vault" {
   resource_group_name        = module.resource_group.rg_name
   acr_identity_principal_id  = module.acr.acr_identity_principal_id
   application_object_id      = var.spn_object_id
-  spn_principal_id           = var.spn_object_id
+  spn_object_id           = var.spn_object_id
   # ❌ These are missing before this module is called
   acr_username               = module.acr.acr_username
   acr_password               = module.acr.acr_password
