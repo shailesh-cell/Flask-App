@@ -86,4 +86,4 @@ jobs:
       - name: Apply Terraform Plan
         env:
           ARM_USE_OIDC: true
-        run: terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" tfplan
+        run: terraform apply -auto-approve tfplan
