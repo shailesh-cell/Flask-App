@@ -38,11 +38,28 @@ jobs:
       - name: Verify Terraform Version
         run: terraform version
 
+      # ✅ Replace this with a GitHub API-based artifact download
       - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-plan
-          path: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID=${{ github.event.workflow_run.id }}
+          ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts"
+          
+          echo "Fetching artifacts from: $ARTIFACT_URL"
+          
+          # Get artifact download URL
+          DOWNLOAD_URL=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ARTIFACT_URL" | jq -r '.artifacts[] | select(.name=="terraform-plan") | .archive_download_url')
+
+          if [[ -z "$DOWNLOAD_URL" || "$DOWNLOAD_URL" == "null" ]]; then
+            echo "❌ Terraform Plan artifact not found!"
+            exit 1
+          fi
+
+          # Download the artifact
+          curl -s -L -H "Authorization: token $GH_TOKEN" -o terraform-plan.zip "$DOWNLOAD_URL"
+          unzip terraform-plan.zip -d .
+          rm terraform-plan.zip
 
       - name: Check Backend and tfvars Files
         run: |
