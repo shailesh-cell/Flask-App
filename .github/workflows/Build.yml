@@ -64,4 +64,4 @@ jobs:
         with:
           name: terraform-plan
           path: tfplan
-          retention-days: 5  # Retain for 1 day to prevent clutter
+          retention-days: 5  # Retain for 5 day to prevent clutter
