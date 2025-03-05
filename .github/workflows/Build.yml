@@ -1,0 +1,67 @@
+name: Validate and Plan Terraform
+
+on:
+  push:
+    branches:
+      - dev
+      - uat
+      - prod
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  validate-and-plan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set ENV Based on Branch
+        run: |
+          BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
+          echo "ENV=$BRANCH" >> $GITHUB_ENV
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Set Up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        env:
+          ARM_USE_OIDC: true
+        run: |
+          BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+          terraform init -backend-config="$BACKEND_FILE"
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        env:
+          ARM_USE_OIDC: true
+          #TF_LOG: DEBUG
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
+            -var="image_tag=${{ github.sha }}" \
+            -out=tfplan 2>&1 | tee terraform.log || echo "Terraform Plan failed, but continuing..."
+        
+          ls -lh tfplan  # Verify the file exists
+
+      - name: Store Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan
+          path: tfplan
+          retention-days: 5  # Retain for 5 day to prevent clutter

@@ -1,8 +1,0 @@
-app_name              = "flaskapp"
-environment          = "dev"
-location            = "CentralIndia"
-resource_group_name = "flaskapp-dev-rg"
-aci_identity_id     = "<MANAGED_IDENTITY_ID>"
-image_tag           = "latest"
-acr_username        = "flaskappacrdev"
-acr_password        = "<SECRET_PASSWORD>"
