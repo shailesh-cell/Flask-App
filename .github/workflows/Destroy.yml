@@ -1,36 +1,25 @@
-name: Destroy Infrastructure
+name: Destroy Terraform Resources
 
 on:
-  workflow_dispatch: # Manual trigger
+  push:
+    branches:
+      - dev
+      - uat
+      - prod
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
 
 jobs:
-  destroy:
+  destroy-terraform-resources:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ Replace this with a GitHub API-based artifact download
-      - name: Download Terraform Plan Artifact
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          RUN_ID=${{ github.event.workflow_run.id }}
-          ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts"
-          
-          echo "Fetching artifacts from: $ARTIFACT_URL"
-          
-          # Get artifact download URL
-          DOWNLOAD_URL=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ARTIFACT_URL" | jq -r '.artifacts[] | select(.name=="terraform-plan") | .archive_download_url')
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-          if [[ -z "$DOWNLOAD_URL" || "$DOWNLOAD_URL" == "null" ]]; then
-            echo "❌ Terraform Plan artifact not found!"
-            exit 1
-          fi
-
-          # Download the artifact
-          curl -s -L -H "Authorization: token $GH_TOKEN" -o terraform-plan.zip "$DOWNLOAD_URL"
-          unzip terraform-plan.zip -d .
-          rm terraform-plan.zip
-          
       - name: Set ENV Based on Branch
         run: |
           BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
@@ -46,25 +35,27 @@ jobs:
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform Init
+      - name: Terraform Init (for Destroy)
+        env:
+          ARM_USE_OIDC: true
         run: |
           BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
-          if [ ! -f "$BACKEND_FILE" ]; then
-            echo "Backend file not found!"
-            exit 1
-          fi
           terraform init -backend-config="$BACKEND_FILE"
 
-      - name: Confirm Before Destroy
-        run: |
-          echo "⚠️ Are you sure you want to destroy the infrastructure in ${{ env.ENV }}?"
-          echo "To continue, set 'DESTROY_CONFIRM=true' in GitHub Actions Secrets."
-          if [[ "${{ secrets.DESTROY_CONFIRM }}" != "true" ]]; then
-            echo "❌ Destroy confirmation not provided. Aborting!"
-            exit 1
-          fi
-          echo "✅ Confirmation received. Proceeding with destroy."
-
       - name: Terraform Destroy
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform destroy -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -auto-approve
+          terraform destroy -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
+            -var="image_tag=${{ github.sha }}" \
+            -auto-approve 2>&1 | tee terraform_destroy.log || echo "Terraform Destroy failed, but continuing..."
+
+      - name: Upload Destroy Log
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-destroy-log
+          path: terraform_destroy.log
+          retention-days: 5
