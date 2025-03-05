@@ -1,11 +1,7 @@
 name: Destroy Terraform Resources
 
 on:
-  push:
-    branches:
-      - dev
-      - uat
-      - prod
+  workflow_dispatch:  # Allows manual execution from GitHub Actions UI
 
 permissions:
   id-token: write

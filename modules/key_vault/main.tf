@@ -14,7 +14,7 @@ resource "azurerm_key_vault" "kv" {
 }
 
 # Service Principal Access Policy
-resource "azurerm_key_vault_access_policy" "spn_policy" {
+resource "azurerm_key_vault_role_assignment" "spn_policy" {
   scope = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets Officer"
   object_id    = var.spn_object_id
