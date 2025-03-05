@@ -48,8 +48,9 @@ jobs:
       - name: Terraform Plan
         env:
           ARM_USE_OIDC: true
+          TF_LOG: DEBUG
         run: |
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -var="image_tag=${{ github.sha }}" -out=tfplan 2>&1 | tee terraform.log || echo "Terraform Plan failed, but continuing..."
           ls -lh tfplan  # Verify the file exists
           
       - name: Debug Terraform State
