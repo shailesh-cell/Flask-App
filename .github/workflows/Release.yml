@@ -9,6 +9,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  actions: read
 
 jobs:
   deploy:
@@ -19,21 +20,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Extract Branch Name
+      - name: Set ENV Based on Branch
         run: |
-          BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
-          echo "Branch detected: $BRANCH_NAME"
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-
-      - name: Set Environment Variables
-        run: |
-          case "$BRANCH_NAME" in
-            dev) echo "ENV=dev" >> $GITHUB_ENV ;;
-            uat) echo "ENV=uat" >> $GITHUB_ENV ;;
-            prod) echo "ENV=prod" >> $GITHUB_ENV ;;
-            *) echo "❌ Unknown branch: $BRANCH_NAME. Exiting..."; exit 1 ;;
-          esac
-
+          BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
+          echo "ENV=$BRANCH" >> $GITHUB_ENV
+          
       - name: Azure Login with OIDC
         uses: azure/login@v2
         with:
