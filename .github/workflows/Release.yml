@@ -2,7 +2,7 @@ name: Deploy Terraform
 
 on:
   workflow_run:
-    workflows: ["Validate and Plan Terraform"]  # Ensures it runs after build success
+    workflows: ["Validate and Plan Terraform"]
     types:
       - completed
 
@@ -13,30 +13,26 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # Ensure this job runs only if the previous workflow was successful
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Extract Branch Name from Workflow Run
+      - name: Extract Branch Name
         run: |
-          BRANCH_NAME=$(jq -r '.head_branch' <<< '${{ toJson(github.event.workflow_run) }}')
+          BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
           echo "Branch detected: $BRANCH_NAME"
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Set Environment Variables
         run: |
-          if [[ "$BRANCH_NAME" == "dev" ]]; then
-            echo "ENV=dev" >> $GITHUB_ENV
-          elif [[ "$BRANCH_NAME" == "uat" ]]; then
-            echo "ENV=uat" >> $GITHUB_ENV
-          elif [[ "$BRANCH_NAME" == "prod" ]]; then
-            echo "ENV=prod" >> $GITHUB_ENV
-          else
-            echo "❌ Unknown branch: $BRANCH_NAME. Exiting..."
-            exit 1
-          fi
+          case "$BRANCH_NAME" in
+            dev) echo "ENV=dev" >> $GITHUB_ENV ;;
+            uat) echo "ENV=uat" >> $GITHUB_ENV ;;
+            prod) echo "ENV=prod" >> $GITHUB_ENV ;;
+            *) echo "❌ Unknown branch: $BRANCH_NAME. Exiting..."; exit 1 ;;
+          esac
 
       - name: Azure Login with OIDC
         uses: azure/login@v2
@@ -55,12 +51,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: terraform-plan
-          path: tfplan
+          path: .
 
       - name: Check Backend and tfvars Files
         run: |
-          BACKEND_FILE="envs/$ENV/backend-$ENV.tfbackend"
-          TFVARS_FILE="envs/$ENV/$ENV.tfvars"
+          BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+          TFVARS_FILE="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
 
           if [[ ! -f "$BACKEND_FILE" ]]; then
             echo "❌ Backend config file not found: $BACKEND_FILE"
@@ -74,21 +70,12 @@ jobs:
 
           echo "✅ All required files exist."
 
-      - name: Terraform Init with OIDC Authentication
+      - name: Terraform Init
         env:
           ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: terraform init -backend-config="envs/$ENV/backend-$ENV.tfbackend"
+        run: terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
 
       - name: Apply Terraform Plan
         env:
           ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          echo "Applying Terraform Plan..."
-          terraform apply -auto-approve -var-file="envs/$ENV/$ENV.tfvars" tfplan
-          echo "✅ Terraform Apply Completed Successfully"
+        run: terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" tfplan
