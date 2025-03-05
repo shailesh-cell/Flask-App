@@ -39,7 +39,7 @@ data "terraform_remote_state" "acr" {
 resource "azurerm_key_vault_access_policy" "acr_policy" {
   key_vault_id = azurerm_key_vault.kv.id
   tenant_id    = var.tenant_id
-  object_id    = data.terraform_remote_state.acr.outputs.acr_identity_principal_id # Passed from ACR module
+  object_id    = data.terraform_remote_state.acr.outputs.acr.identity.0.principal_id # Passed from ACR module
 
   secret_permissions = ["Get", "List", "Set", "Delete"]
 }
