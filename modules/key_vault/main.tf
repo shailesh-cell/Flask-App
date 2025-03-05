@@ -40,19 +40,19 @@ resource "azurerm_role_assignment" "acr_policy" {
 }
 
 # Store ACR Username in Key Vault
-resource "azurerm_key_vault_secret" "acr_username" {
-  name         = "acr-username"
-  value        = "dummy-username"
-  key_vault_id = azurerm_key_vault.kv.id
+#resource "azurerm_key_vault_secret" "acr_username" {
+#  name         = "acr-username"
+#  value        = "dummy-username"
+#  key_vault_id = azurerm_key_vault.kv.id
 
-  depends_on = [azurerm_key_vault.kv]
-}
+#  depends_on = [azurerm_key_vault.kv]
+#}#
 
 # Store ACR Password in Key Vault
-resource "azurerm_key_vault_secret" "acr_password" {
-  name         = "acr-password"
-  value        = "dummy-password"
-  key_vault_id = azurerm_key_vault.kv.id
+#resource "azurerm_key_vault_secret" "acr_password" {
+#  name         = "acr-password"
+#  value        = "dummy-password"
+#  key_vault_id = azurerm_key_vault.kv.id
 
-  depends_on = [azurerm_key_vault.kv]
-}
+#  depends_on = [azurerm_key_vault.kv]
+#}#
