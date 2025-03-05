@@ -52,6 +52,6 @@ jobs:
       - name: Store Terraform Plan Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-plan-${{ github.run_id }}
+          name: terraform-plan
           path: tfplan
           retention-days: 5  # Retain for 1 day to prevent clutter
