@@ -15,12 +15,9 @@ resource "azurerm_key_vault" "kv" {
 
 # Service Principal Access Policy
 resource "azurerm_key_vault_access_policy" "spn_policy" {
-  key_vault_id = azurerm_key_vault.kv.id
-  tenant_id    = var.tenant_id
+  scope = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets Officer"
   object_id    = var.spn_object_id
-
-  secret_permissions = ["Get", "List", "Set", "Delete"]
-
 }
 
 data "terraform_remote_state" "acr" {
@@ -36,12 +33,10 @@ data "terraform_remote_state" "acr" {
 
 
 # ACR Identity Access Policy
-resource "azurerm_key_vault_access_policy" "acr_policy" {
-  key_vault_id = azurerm_key_vault.kv.id
-  tenant_id    = var.tenant_id
-  object_id    = var.acr_identity_principal_id # Passed from ACR module  #removed .acr after output 7:10
-
-  secret_permissions = ["Get", "List", "Set", "Delete"]
+resource "azurerm_key_vault_role_assignment" "acr_policy" {
+  scope = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets Officer"
+  object_id    = var.acr_identity_principal_id # Passed from ACR module
 }
 
 # Store ACR Username in Key Vault
