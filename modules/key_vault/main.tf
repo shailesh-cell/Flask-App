@@ -26,6 +26,7 @@ resource "azurerm_key_vault_access_policy" "spn_policy" {
 data "terraform_remote_state" "acr" {
   backend = "azurerm"
   config = {
+    resource_group_name  = "terraform_tfstate_rg"
     storage_account_name = "terraformconfigsa"
     container_name       = "tfstate"
     key                  = "dev/terraform.tfstate"
