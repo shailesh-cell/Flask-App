@@ -14,7 +14,7 @@ resource "azurerm_key_vault" "kv" {
 }
 
 # Service Principal Access Policy
-resource "azurerm_key_vault_role_assignment" "spn_policy" {
+resource "azurerm_role_assignment" "spn_policy" {
   scope = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets Officer"
   object_id    = var.spn_object_id
@@ -33,7 +33,7 @@ data "terraform_remote_state" "acr" {
 
 
 # ACR Identity Access Policy
-resource "azurerm_key_vault_role_assignment" "acr_policy" {
+resource "azurerm_role_assignment" "acr_policy" {
   scope = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets Officer"
   object_id    = var.acr_identity_principal_id # Passed from ACR module
