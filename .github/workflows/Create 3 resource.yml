@@ -36,7 +36,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       # ✅ Replace this with a GitHub API-based artifact download
-      - name: Download Terraform Plan Artifact
+      - name: Download All Terraform Plan Artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -45,19 +45,27 @@ jobs:
           
           echo "Fetching artifacts from: $ARTIFACT_URL"
           
-          # Get artifact download URL
-          DOWNLOAD_URL=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ARTIFACT_URL" | jq -r '.artifacts[] | select(.name=="terraform-plan") | .archive_download_url')
+          # Get all artifact download URLs
+          DOWNLOAD_URLS=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ARTIFACT_URL" | jq -r '.artifacts[] | select(.name | startswith("terraform-plan")) | {name, url: .archive_download_url}')
 
-          if [[ -z "$DOWNLOAD_URL" || "$DOWNLOAD_URL" == "null" ]]; then
-            echo "❌ Terraform Plan artifact not found!"
+          if [[ -z "$DOWNLOAD_URLS" || "$DOWNLOAD_URLS" == "null" ]]; then
+            echo "❌ No Terraform Plan artifacts found!"
             exit 1
           fi
 
-          # Download the artifact
-          curl -s -L -H "Authorization: token $GH_TOKEN" -o terraform-plan.zip "$DOWNLOAD_URL"
-          unzip terraform-plan.zip -d .
-          rm terraform-plan.zip
-          
+          # Loop through all artifacts and download each one
+          echo "$DOWNLOAD_URLS" | jq -c '.[]' | while read -r artifact; do
+            NAME=$(echo "$artifact" | jq -r '.name')
+            URL=$(echo "$artifact" | jq -r '.url')
+
+            echo "Downloading artifact: $NAME from $URL"
+            curl -s -L -H "Authorization: token $GH_TOKEN" -o "$NAME.zip" "$URL"
+            unzip "$NAME.zip" -d "$NAME"
+            rm "$NAME.zip"
+          done
+
+          echo "✅ All Terraform Plan artifacts downloaded and extracted!"
+
       - name: Check Backend and tfvars Files
         run: |
           BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
@@ -88,11 +96,11 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform apply -auto-approve tfplan \
-            -target=module.resource_group \
-            -target=module.acr \
-            -target=module.acr_secret \
-            -target=module.key_vault
+          terraform apply -auto-approve terraform-plan-resource-group/tfplan_resource_group \
+          && terraform apply -auto-approve terraform-plan-acr/tfplan_acr \
+          && terraform apply -auto-approve terraform-plan-acr-secrets/tfplan_acr-secrets \
+          && terraform apply -auto-approve terraform-plan-key-vault/tfplan_key_vault
+
 
       - name: Extract ACR & Key Vault Names from State
         run: |
