@@ -82,7 +82,20 @@ jobs:
           gh run download $RUN_ID --dir ./downloaded-artifacts
 
           echo "✅ All artifacts downloaded successfully!"
+          
+      - name: Extract Terraform Plan Artifacts
+        run: |
+          # Verify if artifacts exist
+          ls -R ./downloaded-artifacts
 
+          # Extract each artifact
+          for artifact in ./downloaded-artifacts/*.zip; do
+            echo "Extracting $artifact"
+            unzip -o "$artifact" -d "./terraform-plans/"
+          done
+          
+          # Verify extracted files
+          ls -R ./terraform-plans/
 
 
       - name: Check Backend and tfvars Files
