@@ -64,7 +64,6 @@ jobs:
             #rm "$NAME.zip"
           #done
           #   
-          #echo "✅ All Terraform Plan artifacts downloaded and extracted!"
 
       - name: Download All Artifacts from Last Workflow
         env:
