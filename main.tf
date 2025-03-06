@@ -72,6 +72,7 @@ module "aci" {
   acr_login_server    = module.acr.login_server
   image_tag           = var.image_tag
   container_port      = var.container_port
+  count  = var.deploy_aci ? 1 : 0  # Only deploy if deploy_aci is true
 
   depends_on = [module.acr, module.acr_secrets]
 }

@@ -86,3 +86,9 @@ variable "spn_object_id" {
   description = "Service Principal Object ID for access policy"
   type        = string
 }
+
+variable "deploy_aci" {
+  type    = bool
+  default = false
+}
+
