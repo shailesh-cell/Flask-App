@@ -145,18 +145,4 @@ jobs:
           && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-key-vault/tfplan_key_vault
 
       - name: Terraform Refresh State
-        run: terraform refresh
-        
-      - name: Extract ACR & Key Vault Names from State
-        run: |
-          ACR_NAME=$(terraform output -raw acr_name)
-          KEY_VAULT_NAME=$(terraform output -raw key_vault_name)
-          echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
-          echo "KEY_VAULT_NAME=$KEY_VAULT_NAME" >> $GITHUB_ENV
-
-      - name: Upload Terraform Outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-plan-acr-details
-          path: tfplan_acr_details
-          retention-days: 5  # Retain for 5 day to prevent clutter  
+        run: terraform refresh 
