@@ -101,7 +101,20 @@ jobs:
           
           ls -lh tfplan_key_vault  # Verify the file exists
           
-        
+      - name: Terraform Plan for ACI
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
+            -var="image_tag=${{ github.sha }}" \
+            -target=module.aci \
+            -out=tfplan_aci 2>&1 | tee terraform_aci.log || echo "Terraform Plan failed, but continuing..."
+          
+          ls -lh tfplan_aci  # Verify the file exists
+          
           
       - name: Store Terraform Plan for Resource Group
         uses: actions/upload-artifact@v4
@@ -122,6 +135,13 @@ jobs:
         with:
           name: terraform-plan-key-vault
           path: tfplan_key_vault
+          retention-days: 5
+          
+      - name: Store Terraform Plan for ACI
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-aci
+          path: tfplan_aci
           retention-days: 5
           
       - name: Store Terraform Plan for ACR Secrets
