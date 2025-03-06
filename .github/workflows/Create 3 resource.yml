@@ -104,7 +104,18 @@ jobs:
         env:
           ARM_USE_OIDC: true
         run: terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
-        
+
+      - name: Terraform Plan (Only Required Modules)
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -out=./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group \
+          && terraform plan -out=./downloaded-artifacts/terraform-plan-acr/tfplan_acr \
+          && terraform plan -out=./downloaded-artifacts/terraform-plan-acr-secrets/tfplan_acr_secrets \
+          && terraform plan -out=./downloaded-artifacts/terraform-plan-key-vault/tfplan_key_vault \       
         
       - name: Terraform Apply (Only Required Modules)
         env:
