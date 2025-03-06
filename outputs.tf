@@ -25,19 +25,19 @@ output "login_server" {
 }
 
 output "aci_id" {
-  value = module.aci.aci_id
+  value = var.deploy_aci ? module.aci[0].aci_id : null
 }
 
 output "aci_identity_principal_id" {
-  value = module.aci.aci_identity_principal_id
+  value = var.deploy_aci ? module.aci[0].aci_identity_principal_id : null
 }
 
 output "aci_name" {
-  value = module.aci.aci_name
+  value = var.deploy_aci ? module.aci[0].aci_name : null
 }
 
 output "aci_fqdn" {
-  value = module.aci.aci_fqdn
+  value = var.deploy_aci ? module.aci[0].aci_fqdn : null
 }
 
 output "key_vault_id" {
