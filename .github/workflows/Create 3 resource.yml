@@ -36,35 +36,53 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       # ✅ Replace this with a GitHub API-based artifact download
-      - name: Download All Terraform Plan Artifacts
+     # - name: Download All Terraform Plan Artifacts
+      #  env:
+      #    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  run: |
+       #   RUN_ID=${{ github.event.workflow_run.id }}
+        #  ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts"
+         # 
+         # echo "Fetching artifacts from: $ARTIFACT_URL"
+          
+          # Get all artifact download URLs
+        #  DOWNLOAD_URLS=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ARTIFACT_URL" | jq -r '.artifacts[] | select(.name | startswith("terraform-plan")) | {name, url: .archive_download_url}')
+
+        #  if [[ -z "$DOWNLOAD_URLS" || "$DOWNLOAD_URLS" == "null" ]]; then
+         #   echo "❌ No Terraform Plan artifacts found!"
+          #  exit 1
+          #fi
+
+          # Loop through all artifacts and download each one
+          #echo "$DOWNLOAD_URLS" | jq -c '.[]' | while read -r artifact; do
+           # NAME=$(echo "$artifact" | jq -r '.name')
+           # URL=$(echo "$artifact" | jq -r '.url')
+
+            #echo "Downloading artifact: $NAME from $URL"
+            #curl -s -L -H "Authorization: token $GH_TOKEN" -o "$NAME.zip" "$URL"
+            #unzip "$NAME.zip" -d "$NAME"
+            #rm "$NAME.zip"
+          #done
+          #   
+          #echo "✅ All Terraform Plan artifacts downloaded and extracted!"
+
+      - name: Download All Terraform Plan Artifacts from Last Workflow
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RUN_ID=${{ github.event.workflow_run.id }}
-          ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts"
+          # Find the latest successful run of build.yml
+          RUN_ID=$(gh run list --workflow Build.yml --status completed --json databaseId --jq ".[0].databaseId")
           
-          echo "Fetching artifacts from: $ARTIFACT_URL"
-          
-          # Get all artifact download URLs
-          DOWNLOAD_URLS=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ARTIFACT_URL" | jq -r '.artifacts[] | select(.name | startswith("terraform-plan")) | {name, url: .archive_download_url}')
-
-          if [[ -z "$DOWNLOAD_URLS" || "$DOWNLOAD_URLS" == "null" ]]; then
-            echo "❌ No Terraform Plan artifacts found!"
+          if [[ -z "$RUN_ID" ]]; then
+            echo "❌ No previous workflow run found!"
             exit 1
           fi
 
-          # Loop through all artifacts and download each one
-          echo "$DOWNLOAD_URLS" | jq -c '.[]' | while read -r artifact; do
-            NAME=$(echo "$artifact" | jq -r '.name')
-            URL=$(echo "$artifact" | jq -r '.url')
+          echo "Downloading artifacts from run ID: $RUN_ID"
+          gh run download $RUN_ID --name terraform-plan-resource-group --dir ./downloaded-artifacts
 
-            echo "Downloading artifact: $NAME from $URL"
-            curl -s -L -H "Authorization: token $GH_TOKEN" -o "$NAME.zip" "$URL"
-            unzip "$NAME.zip" -d "$NAME"
-            rm "$NAME.zip"
-          done
+          echo "✅ Artifact downloaded successfully!"
 
-          echo "✅ All Terraform Plan artifacts downloaded and extracted!"
 
       - name: Check Backend and tfvars Files
         run: |
