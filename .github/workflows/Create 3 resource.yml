@@ -112,10 +112,11 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform plan -out=./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group \
-          && terraform plan -out=./downloaded-artifacts/terraform-plan-acr/tfplan_acr \
-          && terraform plan -out=./downloaded-artifacts/terraform-plan-acr-secrets/tfplan_acr_secrets \
-          && terraform plan -out=./downloaded-artifacts/terraform-plan-key-vault/tfplan_key_vault \       
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group \
+          && terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=./downloaded-artifacts/terraform-plan-acr/tfplan_acr \
+          && terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=./downloaded-artifacts/terraform-plan-acr-secrets/tfplan_acr_secrets \
+          && terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=./downloaded-artifacts/terraform-plan-key-vault/tfplan_key_vault
+      
         
       - name: Terraform Apply (Only Required Modules)
         env:
