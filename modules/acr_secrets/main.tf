@@ -3,8 +3,6 @@ resource "azurerm_key_vault_secret" "acr_username" {
   value        = var.acr_username
   key_vault_id = var.key_vault_id
  
- depends_on = [azurerm_key_vault.kv]
-
 }
 
 resource "azurerm_key_vault_secret" "acr_password" {
@@ -12,5 +10,4 @@ resource "azurerm_key_vault_secret" "acr_password" {
   value        = var.acr_password
   key_vault_id = var.key_vault_id
 
-  depends_on = [azurerm_key_vault.kv]
 }
