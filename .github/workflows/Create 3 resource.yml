@@ -83,21 +83,6 @@ jobs:
 
           echo "✅ All artifacts downloaded successfully!"
           
-      - name: Extract Terraform Plan Artifacts
-        run: |
-          # Verify if artifacts exist
-          ls -R ./downloaded-artifacts
-
-          # Extract each artifact
-          for artifact in ./downloaded-artifacts/*.zip; do
-            echo "Extracting $artifact"
-            unzip -o "$artifact" -d "./terraform-plans/"
-          done
-          
-          # Verify extracted files
-          ls -R ./terraform-plans/
-
-
       - name: Check Backend and tfvars Files
         run: |
           BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
@@ -128,10 +113,11 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform apply -auto-approve terraform-plan-resource-group/tfplan_resource_group \
-          && terraform apply -auto-approve terraform-plan-acr/tfplan_acr \
-          && terraform apply -auto-approve terraform-plan-acr-secrets/tfplan_acr-secrets \
-          && terraform apply -auto-approve terraform-plan-key-vault/tfplan_key_vault
+          terraform apply -auto-approve ./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group \
+          && terraform apply -auto-approve ./downloaded-artifacts/terraform-plan-acr/tfplan_acr \
+          && terraform apply -auto-approve ./downloaded-artifacts/terraform-plan-acr-secrets/tfplan_acr_secrets \
+          && terraform apply -auto-approve ./downloaded-artifacts/terraform-plan-key-vault/tfplan_key_vault
+
 
 
       - name: Extract ACR & Key Vault Names from State
