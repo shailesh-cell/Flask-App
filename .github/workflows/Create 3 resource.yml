@@ -124,11 +124,10 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform apply -auto-approve ./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group \
-          && terraform apply -auto-approve ./downloaded-artifacts/terraform-plan-acr/tfplan_acr \
-          && terraform apply -auto-approve ./downloaded-artifacts/terraform-plan-acr-secrets/tfplan_acr_secrets \
-          && terraform apply -auto-approve ./downloaded-artifacts/terraform-plan-key-vault/tfplan_key_vault
-
+          terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group \
+          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-acr/tfplan_acr \
+          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-acr-secrets/tfplan_acr_secrets \
+          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-key-vault/tfplan_key_vault
 
 
       - name: Extract ACR & Key Vault Names from State
