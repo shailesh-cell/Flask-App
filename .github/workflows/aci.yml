@@ -1,0 +1,39 @@
+name: Deploy ACI
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Image"]
+    types:
+      - completed
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  deploy-aci:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Terraform Outputs
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-outputs
+
+      - name: Extract ACR and Key Vault Details
+        run: |
+          ACR_NAME=$(terraform output -raw acr_name)
+          echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
+
+      - name: Deploy ACI
+        run: |
+          az container create --resource-group $(terraform output -raw resource_group) \ 
+          --name mycontainer \ 
+          --image $ACR_NAME.azurecr.io/myapp:latest \ 
+          --registry-login-server $ACR_NAME.azurecr.io \ 
+          --identity SystemAssigned
