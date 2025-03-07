@@ -89,6 +89,11 @@ jobs:
           echo "RESOURCE_GROUP=$RESOURCE_GROUP" >> $GITHUB_ENV
 
       - name: Run Terraform Plan for ACI
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}      
         run: terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.aci
 
       - name: Deploy ACI with Terraform
