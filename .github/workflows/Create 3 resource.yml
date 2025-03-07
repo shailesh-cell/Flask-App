@@ -35,35 +35,6 @@ jobs:
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # ✅ Replace this with a GitHub API-based artifact download
-     # - name: Download All Terraform Plan Artifacts
-      #  env:
-      #    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #  run: |
-       #   RUN_ID=${{ github.event.workflow_run.id }}
-        #  ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts"
-         # 
-         # echo "Fetching artifacts from: $ARTIFACT_URL"
-          
-          # Get all artifact download URLs
-        #  DOWNLOAD_URLS=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ARTIFACT_URL" | jq -r '.artifacts[] | select(.name | startswith("terraform-plan")) | {name, url: .archive_download_url}')
-
-        #  if [[ -z "$DOWNLOAD_URLS" || "$DOWNLOAD_URLS" == "null" ]]; then
-         #   echo "❌ No Terraform Plan artifacts found!"
-          #  exit 1
-          #fi
-
-          # Loop through all artifacts and download each one
-          #echo "$DOWNLOAD_URLS" | jq -c '.[]' | while read -r artifact; do
-           # NAME=$(echo "$artifact" | jq -r '.name')
-           # URL=$(echo "$artifact" | jq -r '.url')
-
-            #echo "Downloading artifact: $NAME from $URL"
-            #curl -s -L -H "Authorization: token $GH_TOKEN" -o "$NAME.zip" "$URL"
-            #unzip "$NAME.zip" -d "$NAME"
-            #rm "$NAME.zip"
-          #done
-          #   
 
       - name: Download All Artifacts from Last Workflow
         env:
@@ -111,38 +82,5 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.resource_group -out=tfplan_resource_group \
-          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group
-          
-      - name: Terraform Plan and Apply ACR
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.acr -out=tfplan_acr \
-          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-acr/tfplan_acr \
-
-      - name: Terraform Plan and Apply ACR Secrets
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.acr_secrets -out=tfplan_acr_secrets \
-          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-acr-secrets/tfplan_acr_secrets \
-
-      - name: Terraform Plan and Apply Key Vault
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.key_vault -out=tfplan_key_vault \
-          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-key-vault/tfplan_key_vault
-
-      - name: Terraform Refresh State
-        run: terraform refresh 
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
+          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" 

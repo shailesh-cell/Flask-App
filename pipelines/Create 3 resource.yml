@@ -64,7 +64,6 @@ jobs:
             #rm "$NAME.zip"
           #done
           #   
-          #echo "✅ All Terraform Plan artifacts downloaded and extracted!"
 
       - name: Download All Artifacts from Last Workflow
         env:
@@ -105,42 +104,55 @@ jobs:
           ARM_USE_OIDC: true
         run: terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
 
-      - name: Terraform Plan (Only Required Modules)
+      - name: Terraform Plan and Apply(Only Required Modules)
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group \
-          && terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=./downloaded-artifacts/terraform-plan-acr/tfplan_acr \
-          && terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=./downloaded-artifacts/terraform-plan-acr-secrets/tfplan_acr_secrets \
-          && terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=./downloaded-artifacts/terraform-plan-key-vault/tfplan_key_vault
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
+          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" 
       
-        
-      - name: Terraform Apply (Only Required Modules)
+      - name: Terraform Plan and Apply(Only Required Modules)
         env:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group \
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.resource_group -out=tfplan_resource_group \
+          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group
+          
+      - name: Terraform Plan and Apply ACR
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.acr -out=tfplan_acr \
           && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-acr/tfplan_acr \
+
+      - name: Terraform Plan and Apply ACR Secrets
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.acr_secrets -out=tfplan_acr_secrets \
           && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-acr-secrets/tfplan_acr_secrets \
+
+      - name: Terraform Plan and Apply Key Vault
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.key_vault -out=tfplan_key_vault \
           && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-key-vault/tfplan_key_vault
 
-
-      - name: Extract ACR & Key Vault Names from State
-        run: |
-          ACR_NAME=$(terraform output -raw acr_name)
-          KEY_VAULT_NAME=$(terraform output -raw key_vault_name)
-          echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
-          echo "KEY_VAULT_NAME=$KEY_VAULT_NAME" >> $GITHUB_ENV
-
-      - name: Upload Terraform Outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-plan-acr-details
-          path: tfplan_acr_details
-          retention-days: 5  # Retain for 5 day to prevent clutter
+      - name: Terraform Refresh State
+        run: terraform refresh 
