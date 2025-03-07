@@ -35,16 +35,16 @@ jobs:
 
       - name: Extract ACR Name
         run: |
-          ACR_NAME=$(terraform output -raw acr_name 2>/dev/null || echo "")
-          if [[ -z "$ACR_NAME" ]]; then
-            echo "❌ Failed to retrieve ACR_NAME from Terraform output."
+          acr_name=$(terraform output -raw acr_name 2>/dev/null || echo "")
+          if [[ -z "$acr_name" ]]; then
+            echo "❌ Failed to retrieve acr_name from Terraform output."
             exit 1
           fi
-          echo "✅ ACR Name: $ACR_NAME"
-          echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
+          echo "✅ acr name: $acr_name"
+          echo "acr_name=$acr_name" >> $GITHUB_ENV
 
       - name: Authenticate to ACR
-        run: az acr login --name $ACR_NAME
+        run: az acr login --name $acr_name
 
       - name: Build and Push Docker Image
         run: |
