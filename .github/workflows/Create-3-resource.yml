@@ -36,7 +36,7 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
 
-      - name: Download All Artifacts from Last Workflow
+      - name: Download All Artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
