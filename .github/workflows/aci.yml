@@ -1,4 +1,30 @@
+name: ACI Deployment
 
+on:
+  workflow_run:
+    workflows: ["Deploy resource_group, acr,acr_secret,key_vault"]
+    types:
+      - completed
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set ENV Based on Branch
+        run: |
+          BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
+          echo "ENV=$BRANCH" >> $GITHUB_ENV
+          
       - name: Azure Login with OIDC
         uses: azure/login@v2
         with:
@@ -71,4 +97,10 @@
       - name: Verify ACI Deployment
         run: |
           STATUS=$(az container show --name $ACI_NAME --resource-group $RESOURCE_GROUP --query "instanceView.state" -o tsv)
-          echo "ACI Deployment Status: $STATUS"
+          
+          if [[ -z "$STATUS" ]]; then
+            echo "❌ Failed to retrieve ACI deployment status!"
+            exit 1
+          fi
+
+          echo "✅ ACI Deployment Status: $STATUS"
