@@ -13,7 +13,7 @@ resource "azurerm_container_group" "aci" {
 
   container {
     name   = var.app_name
-    image  = "mcr.microsoft.com/hello-world" #"${var.acr_login_server}/${var.app_name}:${var.image_tag}"
+    image  = "${var.acr_login_server}/${var.app_name}:${var.image_tag}"
     cpu    = 1
     memory = 1.5
 

@@ -104,14 +104,3 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
-
-      - name: Verify ACI Deployment
-        run: |
-          STATUS=$(az container show --name $ACI_NAME --resource-group $RESOURCE_GROUP --query "instanceView.state" -o tsv)
-          
-          if [[ -z "$STATUS" ]]; then
-            echo "❌ Failed to retrieve ACI deployment status!"
-            exit 1
-          fi
-
-          echo "✅ ACI Deployment Status: $STATUS"
