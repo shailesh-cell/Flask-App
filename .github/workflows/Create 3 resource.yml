@@ -82,5 +82,5 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
-          && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" 
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=tfplan
+          terraform apply -auto-approve tfplan 
