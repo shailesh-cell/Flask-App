@@ -87,7 +87,7 @@ jobs:
           terraform output -json > tf-outputs.json  # Save outputs in JSON
           
       - name: Upload Terraform Outputs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terraform-outputs
           path: tf-outputs.json 
