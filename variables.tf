@@ -26,6 +26,7 @@ variable "app_name" {
 variable "image_tag" {
   description = "The tag for the container image."
   type        = string
+  default = "latest" # Change this as needed
 }
 
 # Variables for ACR Module
