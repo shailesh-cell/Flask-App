@@ -1,10 +1,7 @@
 name: ACI Deployment
 
 on:
-  workflow_run:
-    workflows:
-    types:
-      - completed
+  workflow_dispatch:
 
 permissions:
   id-token: write
