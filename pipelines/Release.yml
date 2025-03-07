@@ -1,0 +1,92 @@
+name: Deploy Terraform
+
+on:
+  workflow_run:
+    workflows: ["Validate and Plan Terraform"]
+    types:
+      - completed
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set ENV Based on Branch
+        run: |
+          BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
+          echo "ENV=$BRANCH" >> $GITHUB_ENV
+          
+      - name: Azure Login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Set Up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Verify Terraform Version
+        run: terraform version
+
+      # ✅ Replace this with a GitHub API-based artifact download
+      - name: Download Terraform Plan Artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_ID=${{ github.event.workflow_run.id }}
+          ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts"
+          
+          echo "Fetching artifacts from: $ARTIFACT_URL"
+          
+          # Get artifact download URL
+          DOWNLOAD_URL=$(curl -s -H "Authorization: token $GH_TOKEN" -H "Accept: application/vnd.github.v3+json" "$ARTIFACT_URL" | jq -r '.artifacts[] | select(.name=="terraform-plan") | .archive_download_url')
+
+          if [[ -z "$DOWNLOAD_URL" || "$DOWNLOAD_URL" == "null" ]]; then
+            echo "❌ Terraform Plan artifact not found!"
+            exit 1
+          fi
+
+          # Download the artifact
+          curl -s -L -H "Authorization: token $GH_TOKEN" -o terraform-plan.zip "$DOWNLOAD_URL"
+          unzip terraform-plan.zip -d .
+          rm terraform-plan.zip
+
+      - name: Check Backend and tfvars Files
+        run: |
+          BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+          TFVARS_FILE="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
+
+          if [[ ! -f "$BACKEND_FILE" ]]; then
+            echo "❌ Backend config file not found: $BACKEND_FILE"
+            exit 1
+          fi
+
+          if [[ ! -f "$TFVARS_FILE" ]]; then
+            echo "❌ tfvars file not found: $TFVARS_FILE"
+            exit 1
+          fi
+
+          echo "✅ All required files exist."
+
+      - name: Terraform Init
+        env:
+          ARM_USE_OIDC: true
+        run: terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+
+      - name: Apply Terraform Plan
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: terraform apply -auto-approve tfplan

@@ -1,0 +1,89 @@
+name: Build and Push Image
+
+on:
+  workflow_run:
+    workflows: ["Deploy resource_group, acr,acr_secret,key_vault"]
+    types:
+      - completed
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set ENV Based on Branch
+        run: |
+          BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
+          echo "ENV=$BRANCH" >> $GITHUB_ENV
+
+      - name: Azure Login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Set Up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Download Terraform Outputs from Last Workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find the latest successful run of Create-3-resource.yml
+          RUN_ID=$(gh run list --workflow "Deploy resource_group, acr,acr_secret,key_vault" --status completed --json databaseId --jq ".[0].databaseId")
+
+          if [[ -z "$RUN_ID" ]]; then
+            echo "❌ No previous workflow run found!"
+            exit 1
+          fi
+
+          echo "Downloading terraform-outputs from run ID: $RUN_ID"
+          gh run download $RUN_ID --name terraform-outputs --dir ./downloaded-artifacts
+
+          echo "✅ Terraform outputs downloaded successfully!"
+
+      - name: Check if Terraform Outputs Exist
+        run: |
+          if [[ ! -f "./downloaded-artifacts/tf-outputs.json" ]]; then
+            echo "❌ Terraform outputs not found!"
+            exit 1
+          fi
+          echo "✅ Terraform outputs found!"
+          cat ./downloaded-artifacts/tf-outputs.json
+
+      - name: Read Terraform Outputs
+        run: |
+          ACR_NAME=$(jq -r '.acr_name.value' ./downloaded-artifacts/tf-outputs.json)
+          KEY_VAULT_NAME=$(jq -r '.key_vault_name.value' ./downloaded-artifacts/tf-outputs.json)
+
+          if [[ -z "$ACR_NAME" || -z "$KEY_VAULT_NAME" ]]; then
+            echo "❌ Missing required outputs!"
+            exit 1
+          fi
+
+          echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
+          echo "KEY_VAULT_NAME=$KEY_VAULT_NAME" >> $GITHUB_ENV
+          echo "✅ Successfully loaded Terraform outputs."
+
+      - name: Docker Login to ACR
+        run: |
+          az acr login --name $ACR_NAME
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t $ACR_NAME.azurecr.io/flaskapp:latest -f flask-app/Dockerfile flask-app
+          docker push $ACR_NAME.azurecr.io/flaskapp:latest
+
+      - name: Verify Secrets in Key Vault
+        run: |
+          az keyvault secret list --vault-name $KEY_VAULT_NAME

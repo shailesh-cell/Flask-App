@@ -1,39 +1,58 @@
-# Check if Key Vault already exists
-data "azurerm_key_vault" "existing" {
-  name                = "${var.app_name}-${var.environment}-kv"
-  resource_group_name = var.resource_group_name
-}
+# Key Vault Module
 
-# Create Key Vault only if it doesn't exist
 resource "azurerm_key_vault" "kv" {
-  count               = length(data.azurerm_key_vault.existing.id) > 0 ? 0 : 1
-  name                = "${var.app_name}-${var.environment}-kv"
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  sku_name            = "standard"
-  tenant_id           = var.tenant_id
-
-  # Access Policy for Terraform
-  access_policy {
-    tenant_id = var.tenant_id
-    object_id = var.terraform_spn_object_id
-    secret_permissions = [
-      "Get", "List", "Set", "Delete"
-    ]
+  name                     = "${var.app_name}-${var.environment}-kv"
+  resource_group_name      = var.resource_group_name
+  location                 = var.location
+  sku_name                 = "standard"
+  tenant_id                = var.tenant_id
+  purge_protection_enabled = true
+  
+  lifecycle {
+    ignore_changes = [sku_name, tenant_id]
   }
 }
 
-# Local variable to get the Key Vault ID (existing or new)
-locals {
-  key_vault_id = coalesce(
-    data.azurerm_key_vault.existing.id,
-    try(azurerm_key_vault.kv[0].id, null)
-  )
+# Service Principal Access Policy
+resource "azurerm_role_assignment" "spn_policy" {
+  scope = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id    = var.spn_object_id
 }
 
-# Assign RBAC for ACI to access Key Vault secrets
-resource "azurerm_role_assignment" "aci_kv_access" {
-  scope                = local.key_vault_id
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = var.aci_identity_id
+data "terraform_remote_state" "acr" {
+  backend = "azurerm"
+  config = {
+    resource_group_name  = "terraform_tfstate_rg"
+    storage_account_name = "terraformconfigsa"
+    container_name       = "tfstate"
+    key                  = "dev/terraform.tfstate"
+  }
 }
+
+
+
+# ACR Identity Access Policy
+resource "azurerm_role_assignment" "acr_policy" {
+  scope = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id    = var.acr_identity_principal_id # Passed from ACR module
+}
+
+# Store ACR Username in Key Vault
+#resource "azurerm_key_vault_secret" "acr_username" {
+#  name         = "acr-username"
+#  value        = "dummy-username"
+#  key_vault_id = azurerm_key_vault.kv.id
+
+#  depends_on = [azurerm_key_vault.kv]
+#}#
+
+# Store ACR Password in Key Vault
+#resource "azurerm_key_vault_secret" "acr_password" {
+#  name         = "acr-password"
+#  value        = "dummy-password"
+#  key_vault_id = azurerm_key_vault.kv.id
+
+#  depends_on = [azurerm_key_vault.kv]
+#}#

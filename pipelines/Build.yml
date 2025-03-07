@@ -1,0 +1,153 @@
+name: Validate and Plan Terraform
+
+on:
+  push:
+    branches:
+      - dev
+      - uat
+      - prod
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  validate-and-plan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set ENV Based on Branch
+        run: |
+          BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
+          echo "ENV=$BRANCH" >> $GITHUB_ENV
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Set Up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        env:
+          ARM_USE_OIDC: true
+        run: |
+          BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+          terraform init -backend-config="$BACKEND_FILE"
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan for Resource Group
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
+            -var="image_tag=${{ github.sha }}" \
+            -target=module.resource_group \
+            -out=tfplan_resource_group 2>&1 | tee terraform_resource_group.log || echo "Terraform Plan failed, but continuing..."
+          
+          ls -lh tfplan_resource_group  # Verify the file exists
+
+      - name: Terraform Plan for ACR
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
+            -var="image_tag=${{ github.sha }}" \
+            -target=module.acr \
+            -out=tfplan_acr 2>&1 | tee terraform_acr.log || echo "Terraform Plan failed, but continuing..."
+          
+          ls -lh tfplan_acr  # Verify the file exists
+          
+      - name: Terraform Plan for ACR Secrets
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
+            -var="image_tag=${{ github.sha }}" \
+            -target=module.acr_secrets \
+            -out=tfplan_acr_secrets 2>&1 | tee terraform_acr_secrets.log || echo "Terraform Plan failed, but continuing..."
+          
+          ls -lh tfplan_acr_secrets  # Verify the file exists
+
+      - name: Terraform Plan for Key Vault
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
+            -var="image_tag=${{ github.sha }}" \
+            -target=module.key_vault \
+            -out=tfplan_key_vault 2>&1 | tee terraform_key_vault.log || echo "Terraform Plan failed, but continuing..."
+          
+          ls -lh tfplan_key_vault  # Verify the file exists
+          
+      - name: Terraform Plan for ACI
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
+            -var="image_tag=${{ github.sha }}" \
+            -target=module.aci \
+            -out=tfplan_aci 2>&1 | tee terraform_aci.log || echo "Terraform Plan failed, but continuing..."
+          
+          ls -lh tfplan_aci  # Verify the file exists
+          
+          
+      - name: Store Terraform Plan for Resource Group
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-resource-group
+          path: tfplan_resource_group
+          retention-days: 5
+
+      - name: Store Terraform Plan for ACR
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-acr
+          path: tfplan_acr
+          retention-days: 5
+
+      - name: Store Terraform Plan for Key Vault
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-key-vault
+          path: tfplan_key_vault
+          retention-days: 5
+          
+      - name: Store Terraform Plan for ACI
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-aci
+          path: tfplan_aci
+          retention-days: 5
+          
+      - name: Store Terraform Plan for ACR Secrets
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-acr-secrets
+          path: tfplan_acr_secrets
+          retention-days: 5
+
