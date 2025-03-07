@@ -41,7 +41,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Find the latest successful run of build.yml
-          RUN_ID=$(gh run list --workflow Validate and Plan Terraform --status completed --json databaseId --jq ".[0].databaseId")
+          RUN_ID=$(gh run list --workflow "Validate and Plan Terraform" --status completed --json databaseId --jq ".[0].databaseId")
 
           if [[ -z "$RUN_ID" ]]; then
             echo "❌ No previous workflow run found!"
