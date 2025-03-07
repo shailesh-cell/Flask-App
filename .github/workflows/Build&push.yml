@@ -21,8 +21,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Find the latest successful run of Create 3 resource.yml
-          RUN_ID=$(gh run list --workflow Create 3 resource.yml --status completed --json databaseId --jq ".[0].databaseId")
+          # Find the latest successful run of Create-3-resource.yml
+          RUN_ID=$(gh run list --workflow Create-3-resource.yml --status completed --json databaseId --jq ".[0].databaseId")
 
           if [[ -z "$RUN_ID" ]]; then
             echo "❌ No previous workflow run found!"
