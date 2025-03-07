@@ -16,15 +16,19 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
-    steps:    
-    - name: Azure Login with OIDC
+    steps:
+      - name: Azure Login with OIDC
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-          
-      - name: Extract ACR
+
+      - name: Initialize Terraform
+        run: |
+          terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+
+      - name: Extract ACR Name
         run: |
           ACR_NAME=$(terraform output -raw acr_name 2>/dev/null || echo "")
           if [[ -z "$ACR_NAME" ]]; then
