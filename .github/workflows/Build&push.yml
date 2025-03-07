@@ -16,10 +16,23 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Download Terraform Outputs
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-outputs
+
+      - name: Download All Artifacts from Last Workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find the latest successful run of Create 3 resource.yml
+          RUN_ID=$(gh run list --workflow Create 3 resource.yml --status completed --json databaseId --jq ".[0].databaseId")
+
+          if [[ -z "$RUN_ID" ]]; then
+            echo "❌ No previous workflow run found!"
+            exit 1
+          fi
+
+          echo "Downloading ALL artifacts from run ID: $RUN_ID"
+          gh run download $RUN_ID --dir ./downloaded-artifacts
+
+          echo "✅ All artifacts downloaded successfully!"
 
       - name: Extract ACR Name
         run: |
