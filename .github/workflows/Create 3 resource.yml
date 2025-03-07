@@ -111,7 +111,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group \
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.resource_group -out=tfplan_resource_group \
           && terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" ./downloaded-artifacts/terraform-plan-resource-group/tfplan_resource_group
           
       - name: Terraform Plan and Apply ACR
