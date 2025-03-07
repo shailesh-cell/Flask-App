@@ -29,3 +29,8 @@ variable "admin_enabled" {
   type        = bool
   default     = false
 }
+
+variable "spn_object_id" {
+  description = "Service Principal Object ID to grant access to Key Vault"
+  type        = string
+}
