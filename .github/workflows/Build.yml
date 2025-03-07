@@ -54,7 +54,6 @@ jobs:
         run: |
           terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
             -var="image_tag=${{ github.sha }}" \
-            -target=module.resource_group \
             -out=tfplan_resource_group 2>&1 | tee terraform_resource_group.log || echo "Terraform Plan failed, but continuing..."
           
           ls -lh tfplan_resource_group  # Verify the file exists
@@ -68,7 +67,6 @@ jobs:
         run: |
           terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
             -var="image_tag=${{ github.sha }}" \
-            -target=module.acr \
             -out=tfplan_acr 2>&1 | tee terraform_acr.log || echo "Terraform Plan failed, but continuing..."
           
           ls -lh tfplan_acr  # Verify the file exists
@@ -82,7 +80,6 @@ jobs:
         run: |
           terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
             -var="image_tag=${{ github.sha }}" \
-            -target=module.acr_secrets \
             -out=tfplan_acr_secrets 2>&1 | tee terraform_acr_secrets.log || echo "Terraform Plan failed, but continuing..."
           
           ls -lh tfplan_acr_secrets  # Verify the file exists
@@ -96,7 +93,6 @@ jobs:
         run: |
           terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" \
             -var="image_tag=${{ github.sha }}" \
-            -target=module.key_vault \
             -out=tfplan_key_vault 2>&1 | tee terraform_key_vault.log || echo "Terraform Plan failed, but continuing..."
           
           ls -lh tfplan_key_vault  # Verify the file exists
