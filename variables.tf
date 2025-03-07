@@ -90,6 +90,6 @@ variable "spn_object_id" {
 
 variable "deploy_aci" {
   type    = bool
-  default = True
+  default = false
 }
 
