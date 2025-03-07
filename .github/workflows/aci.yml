@@ -2,7 +2,7 @@ name: Deploy ACR Image to ACI
 
 on:
   workflow_run:
-    workflows: ["Build and Push Image"]
+    workflows:
     types:
       - completed
 
