@@ -16,7 +16,11 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
-    steps:
+      - name: Set ENV Based on Branch
+        run: |
+          BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
+          echo "ENV=$BRANCH" >> $GITHUB_ENV
+
       - name: Azure Login with OIDC
         uses: azure/login@v2
         with:
@@ -24,12 +28,48 @@ jobs:
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Set Up Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      - name: Initialize Terraform
+
+      - name: Download All Artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+          # Find the latest successful run of build.yml
+          RUN_ID=$(gh run list --workflow "Deploy resource_group, acr,acr_secret,key_vault" --status completed --json databaseId --jq ".[0].databaseId")
+
+          if [[ -z "$RUN_ID" ]]; then
+            echo "❌ No previous workflow run found!"
+            exit 1
+          fi
+
+          echo "Downloading ALL artifacts from run ID: $RUN_ID"
+          gh run download $RUN_ID --dir ./downloaded-artifacts
+
+          echo "✅ All artifacts downloaded successfully!"
+          
+      - name: Check Backend and tfvars Files
+        run: |
+          BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+          TFVARS_FILE="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
+
+          if [[ ! -f "$BACKEND_FILE" ]]; then
+            echo "❌ Backend config file not found: $BACKEND_FILE"
+            exit 1
+          fi
+
+          if [[ ! -f "$TFVARS_FILE" ]]; then
+            echo "❌ tfvars file not found: $TFVARS_FILE"
+            exit 1
+          fi
+
+          echo "✅ All required files exist."
+
+      - name: Terraform Init
+        env:
+          ARM_USE_OIDC: true
+        run: terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
 
       - name: Extract ACR & ACI Details
         run: |
