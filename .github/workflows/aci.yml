@@ -2,7 +2,7 @@ name: ACI Deployment
 
 on:
   workflow_run:
-    workflows: ["Deploy resource_group, acr,acr_secret,key_vault"]
+    workflows: ["Build and Push Image"]
     types:
       - completed
 
@@ -97,6 +97,11 @@ jobs:
         run: terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.aci
 
       - name: Deploy ACI with Terraform
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
 
       - name: Verify ACI Deployment
