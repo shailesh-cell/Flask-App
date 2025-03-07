@@ -35,11 +35,22 @@ jobs:
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Download Terraform Outputs from create-3-resource.yml
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-outputs
-          path: ./downloaded-artifacts
+      - name: Download Terraform Outputs from Last Workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find the latest successful run of create-3-resource.yml
+          RUN_ID=$(gh run list --workflow create-3-resource.yml --status completed --json databaseId --jq ".[0].databaseId")
+
+          if [[ -z "$RUN_ID" ]]; then
+            echo "❌ No previous workflow run found!"
+            exit 1
+          fi
+
+          echo "Downloading terraform-outputs from run ID: $RUN_ID"
+          gh run download $RUN_ID --name terraform-outputs --dir ./downloaded-artifacts
+
+          echo "✅ Terraform outputs downloaded successfully!"
 
       - name: Check if Terraform Outputs Exist
         run: |
