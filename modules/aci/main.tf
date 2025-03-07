@@ -13,7 +13,7 @@ resource "azurerm_container_group" "aci" {
 
   container {
     name   = var.app_name
-    image  = "${var.acr_login_server}/${var.app_name}:${var.image_tag}"
+    image  = "mcr.microsoft.com/azuredocs/aci-helloworld"  #"${var.acr_login_server}/${var.app_name}:${var.image_tag}"
     cpu    = 1
     memory = 1.5
 
