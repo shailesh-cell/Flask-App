@@ -2,9 +2,10 @@ name: Deploy ACR Image to ACI
 
 on:
   workflow_run:
-    workflows:
+    workflows: ["Build and Push Image"]
     types:
       - completed
+  workflow_dispatch:  # Allows manual triggering
 
 permissions:
   id-token: write
@@ -16,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
+    steps:
       - name: Set ENV Based on Branch
         run: |
           BRANCH=$(echo "${{ github.ref }}" | sed 's|refs/heads/||')
@@ -31,24 +33,21 @@ jobs:
       - name: Set Up Terraform
         uses: hashicorp/setup-terraform@v3
 
-
       - name: Download All Artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Find the latest successful run of build.yml
           RUN_ID=$(gh run list --workflow "Deploy resource_group, acr,acr_secret,key_vault" --status completed --json databaseId --jq ".[0].databaseId")
-
+          
           if [[ -z "$RUN_ID" ]]; then
             echo "❌ No previous workflow run found!"
             exit 1
           fi
-
+          
           echo "Downloading ALL artifacts from run ID: $RUN_ID"
           gh run download $RUN_ID --dir ./downloaded-artifacts
-
           echo "✅ All artifacts downloaded successfully!"
-          
+
       - name: Check Backend and tfvars Files
         run: |
           BACKEND_FILE="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
@@ -74,10 +73,10 @@ jobs:
       - name: Extract ACR & ACI Details
         run: |
           ACR_NAME=$(terraform output -raw acr_name 2>/dev/null || echo "")
-          ACR_IMAGE="$ACR_NAME.azurecr.io/myapp:latest"
           ACI_NAME=$(terraform output -raw aci_name 2>/dev/null || echo "")
-
-          if [[ -z "$ACR_NAME" || -z "$ACI_NAME" ]]; then
+          RESOURCE_GROUP=$(terraform output -raw resource_group_name 2>/dev/null || echo "")
+          
+          if [[ -z "$ACR_NAME" || -z "$ACI_NAME" || -z "$RESOURCE_GROUP" ]]; then
             echo "❌ Failed to retrieve Terraform outputs!"
             exit 1
           fi
@@ -85,16 +84,15 @@ jobs:
           echo "✅ ACR: $ACR_NAME, ACI: $ACI_NAME"
           echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
           echo "ACI_NAME=$ACI_NAME" >> $GITHUB_ENV
-          echo "ACR_IMAGE=$ACR_IMAGE" >> $GITHUB_ENV
+          echo "RESOURCE_GROUP=$RESOURCE_GROUP" >> $GITHUB_ENV
 
       - name: Run Terraform Plan for ACI
-        run: |
-          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.aci
+        run: terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.aci
 
       - name: Deploy ACI with Terraform
-        run: |
-          terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
+        run: terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
 
       - name: Verify ACI Deployment
         run: |
-          az container show --name $ACI_NAME --resource-group $(terraform output -raw resource_group_name) --query "instanceView.state" -o tsv
+          STATUS=$(az container show --name $ACI_NAME --resource-group $RESOURCE_GROUP --query "instanceView.state" -o tsv)
+          echo "ACI Deployment Status: $STATUS"
