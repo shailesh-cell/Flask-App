@@ -1,4 +1,9 @@
-environment                = "dev"
-app_name                   = "flaskapp"
-subscription_id            = "a6435a3c-312e-41ed-878b-3118525f919a"
-use_secondary_subscription = true
+app_name        = "flaskapp"
+environment     = "uat"
+location        = "CentralIndia"
+rg_name         = "flaskapp-dev-rg"
+acr_username    = "flaskappacrdev"
+subscription_id = "a6435a3c-312e-41ed-878b-3118525f919a"
+tenant_id       = "21150d7d-bb5a-486f-86af-73c82a8240bc"
+container_port  = "80"
+spn_object_id   = "9fcbcb9c-90c8-488c-ac48-73a369d8e3fc"

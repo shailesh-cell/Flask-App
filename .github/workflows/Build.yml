@@ -1,7 +1,7 @@
 name: Validate and Plan Terraform
 
 on:
-  workflow_dispatch:
+  push:
 
 permissions:
   id-token: write
