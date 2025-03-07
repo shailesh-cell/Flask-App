@@ -15,8 +15,23 @@ jobs:
   build-push:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-
     steps:
+      - name: Download Terraform Outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-outputs
+
+      - name: Extract ACR Name
+        run: |
+          acr_name=$(terraform output -raw acr_name 2>/dev/null || echo "")
+          if [[ -z "$acr_name" ]]; then
+            echo "❌ Failed to retrieve acr_name from Terraform output."
+            exit 1
+          fi
+          echo "✅ acr name: $acr_name"
+          echo "acr_name=$acr_name" >> $GITHUB_ENV
+
+
       - name: Azure Login with OIDC
         uses: azure/login@v2
         with:
@@ -33,15 +48,7 @@ jobs:
           ARM_USE_OIDC: true
         run: terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
 
-      - name: Extract ACR Name
-        run: |
-          acr_name=$(terraform output -raw acr_name 2>/dev/null || echo "")
-          if [[ -z "$acr_name" ]]; then
-            echo "❌ Failed to retrieve acr_name from Terraform output."
-            exit 1
-          fi
-          echo "✅ acr name: $acr_name"
-          echo "acr_name=$acr_name" >> $GITHUB_ENV
+
 
       - name: Authenticate to ACR
         run: az acr login --name $acr_name

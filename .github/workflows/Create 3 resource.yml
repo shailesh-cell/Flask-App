@@ -83,4 +83,11 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -out=tfplan
-          terraform apply -auto-approve tfplan 
+          terraform apply -auto-approve tfplan
+          terraform output -json > tf-outputs.json  # Save outputs in JSON
+          
+      - name: Upload Terraform Outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-outputs
+          path: tf-outputs.json 
