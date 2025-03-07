@@ -81,8 +81,8 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t $ACR_NAME.azurecr.io/my-app:latest -f flask-app/Dockerfile flask-app
-          docker push $ACR_NAME.azurecr.io/my-app:latest
+          docker build -t $ACR_NAME.azurecr.io/flaskapp:latest -f flask-app/Dockerfile flask-app
+          docker push $ACR_NAME.azurecr.io/flaskapp:latest
 
       - name: Verify Secrets in Key Vault
         run: |
