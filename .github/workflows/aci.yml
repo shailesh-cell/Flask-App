@@ -1,4 +1,4 @@
-name: Deploy ACI
+name: Deploy ACR Image to ACI
 
 on:
   workflow_run:
@@ -17,23 +17,44 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Checkout Code
+      - name: Azure Login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download Terraform Outputs
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-outputs
-
-      - name: Extract ACR and Key Vault Details
+      - name: Initialize Terraform
         run: |
-          ACR_NAME=$(terraform output -raw acr_name)
+          terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+
+      - name: Extract ACR & ACI Details
+        run: |
+          ACR_NAME=$(terraform output -raw acr_name 2>/dev/null || echo "")
+          ACR_IMAGE="$ACR_NAME.azurecr.io/myapp:latest"
+          ACI_NAME=$(terraform output -raw aci_name 2>/dev/null || echo "")
+
+          if [[ -z "$ACR_NAME" || -z "$ACI_NAME" ]]; then
+            echo "❌ Failed to retrieve Terraform outputs!"
+            exit 1
+          fi
+
+          echo "✅ ACR: $ACR_NAME, ACI: $ACI_NAME"
           echo "ACR_NAME=$ACR_NAME" >> $GITHUB_ENV
+          echo "ACI_NAME=$ACI_NAME" >> $GITHUB_ENV
+          echo "ACR_IMAGE=$ACR_IMAGE" >> $GITHUB_ENV
 
-      - name: Deploy ACI
+      - name: Run Terraform Plan for ACI
         run: |
-          az container create --resource-group $(terraform output -raw resource_group) \ 
-          --name mycontainer \ 
-          --image $ACR_NAME.azurecr.io/myapp:latest \ 
-          --registry-login-server $ACR_NAME.azurecr.io \ 
-          --identity SystemAssigned
+          terraform plan -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars" -target=module.aci
+
+      - name: Deploy ACI with Terraform
+        run: |
+          terraform apply -auto-approve -var-file="envs/${{ env.ENV }}/${{ env.ENV }}.tfvars"
+
+      - name: Verify ACI Deployment
+        run: |
+          az container show --name $ACI_NAME --resource-group $(terraform output -raw resource_group_name) --query "instanceView.state" -o tsv

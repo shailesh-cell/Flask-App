@@ -23,10 +23,15 @@ jobs:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          
+      
+      - name: Set Up Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      - name: Initialize Terraform
-        run: |
-          terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
+      - name: Terraform Init
+        env:
+          ARM_USE_OIDC: true
+        run: terraform init -backend-config="envs/${{ env.ENV }}/backend-${{ env.ENV }}.tfbackend"
 
       - name: Extract ACR Name
         run: |
