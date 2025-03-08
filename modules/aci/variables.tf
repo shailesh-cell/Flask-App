@@ -37,3 +37,8 @@ variable "container_port" {
   description = "The port on which the container listens."
   type        = number
 }
+
+variable "spn_object_id" {
+  description = "Service Principal Object ID to grant access to Key Vault"
+  type        = string
+}

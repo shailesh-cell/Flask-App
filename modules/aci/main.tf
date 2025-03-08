@@ -37,3 +37,9 @@ resource "azurerm_role_assignment" "aci_acr_pull" {
   role_definition_name = "AcrPull"
   scope                = var.acr_id
 }
+
+
+  image_registry_credential {
+    username = var.spn_object_id
+    server   = "flaskappdevacr.azurecr.io"
+  }
